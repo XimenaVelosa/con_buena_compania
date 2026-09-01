@@ -219,7 +219,7 @@ h1 {
   object-fit: cover;
 }
 
-.hero-image-wrap img { object-position: center 38%; }
+.hero-image-wrap img { object-position: 70% center; }
 
 .services {
   width: calc(100% - 24px);
@@ -414,7 +414,7 @@ textarea:focus {
   overflow: hidden;
 }
 
-.contact-photo img { object-position: center; }
+.contact-photo img { object-position: 68% center; }
 
 footer {
   padding: 28px 20px 44px;
