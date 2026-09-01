@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="A tu ritmo: bienestar e independencia para disfrutar, resolver y vivir con autonomía." />
+  <title>A tu ritmo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a href="#portada" class="brand" aria-label="A tu ritmo">
+      <img src="assets/logo-a-tu-ritmo.png" alt="A tu ritmo" />
+    </a>
+
+    <nav class="nav">
+      <a href="#portada">Portada</a>
+      <a href="#servicios">Servicios</a>
+      <a href="#contacto">Contacto</a>
+      <a href="#contacto" class="btn btn-coral nav-cta">Comenzar</a>
+    </nav>
+
+    <button class="menu-btn" aria-label="Abrir menú">☰</button>
+  </header>
+
+  <main>
+    <section class="hero section-shell" id="portada">
+      <div class="hero-copy">
+        <p class="eyebrow">Bienestar · Independencia · Acompañamiento</p>
+        <h1>Tu vida,<br>a tu manera.</h1>
+        <p class="hero-text">
+          Bienestar e independencia para disfrutar,
+          resolver y vivir con autonomía.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-navy" href="#servicios">Conocer servicios</a>
+          <a class="btn btn-coral" href="#contacto">Quiero comenzar</a>
+        </div>
+
+        <a class="discover" href="#servicios">
+          <span>↓</span>
+          Descubre más
+        </a>
+      </div>
+
+      <div class="hero-image-wrap">
+        <img src="assets/hero.jpg" alt="Persona mayor disfrutando su día" />
+      </div>
+    </section>
+
+    <section class="services" id="servicios">
+      <div class="section-title">
+        <h2>Servicios</h2>
+        <p>Apoyo práctico y cercano en lo que más importa.</p>
+      </div>
+
+      <div class="services-carousel">
+        <button class="carousel-arrow prev" aria-label="Anterior">‹</button>
+
+        <div class="cards-track" id="cardsTrack">
+          <article class="service-card">
+            <div class="service-icon">📱</div>
+            <h3>Tecnología</h3>
+            <p>Celular, apps y dispositivos.</p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-icon">📅</div>
+            <h3>Trámites y citas</h3>
+            <p>Apoyo para organizar y gestionar.</p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-icon">🛍️</div>
+            <h3>Compras y diligencias</h3>
+            <p>Ayuda con lo cotidiano.</p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-icon">🎨</div>
+            <h3>Hobbies y actividades</h3>
+            <p>Arte, lectura y tiempo para disfrutar.</p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-icon">♡</div>
+            <h3>Bienestar personal</h3>
+            <p>Belleza, cuidado y momentos para ti.</p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-icon">📁</div>
+            <h3>Organización y recuerdos</h3>
+            <p>Fotos, documentos y orden en casa.</p>
+          </article>
+        </div>
+
+        <button class="carousel-arrow next" aria-label="Siguiente">›</button>
+      </div>
+
+      <div class="dots" aria-hidden="true">
+        <span class="active"></span><span></span><span></span><span></span><span></span>
+      </div>
+    </section>
+
+    <section class="contact section-shell" id="contacto">
+      <div class="contact-form-wrap">
+        <div class="contact-heading">
+          <h2>Contacto</h2>
+          <p>Cuéntanos qué necesitas. Estamos aquí para ayudarte a ti y a tu familia.</p>
+        </div>
+
+        <form id="contactForm">
+          <div class="form-grid">
+            <input type="text" name="nombre" placeholder="Nombre" required />
+            <input type="tel" name="telefono" placeholder="Teléfono" />
+          </div>
+          <input type="email" name="correo" placeholder="Correo" required />
+          <textarea name="mensaje" rows="5" placeholder="¿Qué necesitas?" required></textarea>
+          <button class="btn btn-coral submit-btn" type="submit">Enviar ↗</button>
+        </form>
+      </div>
+
+      <div class="contact-info">
+        <a class="contact-chip" href="https://wa.me/573001234567" target="_blank" rel="noopener">
+          <span>💬</span>
+          <div><strong>WhatsApp</strong><small>+57 300 123 4567</small></div>
+        </a>
+        <a class="contact-chip" href="mailto:hola@aturitmo.com">
+          <span>✉️</span>
+          <div><strong>Correo</strong><small>hola@aturitmo.com</small></div>
+        </a>
+        <a class="contact-chip" href="tel:+576011234567">
+          <span>☎️</span>
+          <div><strong>Teléfono</strong><small>+57 601 123 4567</small></div>
+        </a>
+        <a class="contact-chip" href="https://instagram.com/aturitmo.co" target="_blank" rel="noopener">
+          <span>◎</span>
+          <div><strong>Instagram</strong><small>@aturitmo.co</small></div>
+        </a>
+      </div>
+
+      <div class="contact-photo">
+        <img src="assets/contacto-servicio.jpg" alt="Acompañamiento en tecnología a una persona mayor" />
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 A tu ritmo. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
