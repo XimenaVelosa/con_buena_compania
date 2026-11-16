@@ -55,3 +55,6 @@ body{overflow-x:hidden}.shell{width:100%;padding:14px 10px 28px}.shell:after{opa
 @media(min-width:701px){
   .form-actions .button.primary{flex:0 1 auto;width:auto;max-width:230px}
 }
+.field-grid>label>input[type=time]{text-align:center}
+.field-grid>label>input[type=time]::-webkit-date-and-time-value{width:100%;text-align:center;line-height:normal}
+.field-grid>label>input[type=time]::-webkit-datetime-edit{display:inline-flex;justify-content:center;align-items:center;padding:0}
