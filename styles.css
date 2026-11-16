@@ -55,6 +55,8 @@ body{overflow-x:hidden}.shell{width:100%;padding:14px 10px 28px}.shell:after{opa
 @media(min-width:701px){
   .form-actions .button.primary{flex:0 1 auto;width:auto;max-width:230px}
 }
+input:not([type=checkbox]):not([type=radio]),textarea{font-weight:400}
+input::placeholder,textarea::placeholder{font-weight:400}
 .field-grid>label>input[type=time]{text-align:center}
 .location-permission-help{min-width:0;border:1px solid var(--line);border-radius:12px;padding:16px;background:#eef9f8;color:var(--navy);font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 .location-permission-help h3{margin:0 0 8px;font-size:16px}
