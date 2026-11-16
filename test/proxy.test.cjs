@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const handler = require('../api/[...path].js');
+const handler = require('../api/proxy.js');
 
 function response() {
   return { headers: {}, code: null, body: null, setHeader(key, value) { this.headers[key] = value; }, status(code) { this.code = code; return this; }, json(data) { this.body = data; }, send(data) { this.body = data; } };
@@ -11,9 +11,13 @@ test('CRM proxy validates routes, requires explicit writes and forwards private 
   const previousFetch = global.fetch;
   try {
     delete process.env.BACKEND_URL;
+    global.fetch = async (url) => {
+      assert.equal(String(url), 'https://con-buena-compania-backend.vercel.app/auth/session');
+      return { status: 401, headers: { getSetCookie: () => [] }, text: async () => '{"message":"Ingresa para continuar."}' };
+    };
     let res = response();
-    await handler({ method: 'GET', url: '/api/clients', headers: {} }, res);
-    assert.equal(res.code, 503);
+    await handler({ method: 'GET', url: '/api/proxy?route=auth%2Fsession', headers: {} }, res);
+    assert.equal(res.code, 401);
     process.env.BACKEND_URL = 'https://api.example.com';
     res = response();
     await handler({ method: 'GET', url: '/api/other', headers: {} }, res);
@@ -32,6 +36,15 @@ test('CRM proxy validates routes, requires explicit writes and forwards private 
     assert.equal(res.headers['Cache-Control'], 'no-store');
     assert.match(res.headers['Set-Cookie'][0], /HttpOnly/);
     assert.equal(JSON.parse(res.body).user.username, 'admin');
+    res = response();
+    await handler({ method: 'GET', url: '/api/proxy?route=auth/session', headers: { cookie: 'cbc_admin_session=opaque' } }, res);
+    assert.equal(res.code, 200);
+    res = response();
+    await handler({ method: 'GET', url: '/api/proxy', query: { route: 'auth/session' }, headers: { cookie: 'cbc_admin_session=opaque' } }, res);
+    assert.equal(res.code, 200);
+    res = response();
+    await handler({ method: 'GET', url: '/api/proxy?route=https://attacker.example', headers: {} }, res);
+    assert.equal(res.code, 404);
     global.fetch = async () => { throw new Error('offline'); };
     res = response();
     await handler({ method: 'GET', url: '/api/clients', headers: {} }, res);

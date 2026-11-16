@@ -5,6 +5,6 @@
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check crm.js && node --check app.js && node --check config.js && node --check api/[...path].js"
+    "check": "node --check crm.js && node --check app.js && node --check config.js && node --check api/proxy.js"
   }
 }

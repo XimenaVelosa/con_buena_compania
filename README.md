@@ -10,13 +10,13 @@ El administrador debe cambiar su contraseña inicial antes de acceder a los regi
 
 ## Vercel
 
-El frontend usa `/api` en producción. Configura **BACKEND_URL** en las variables de entorno del proyecto frontend de Vercel con la URL HTTPS del backend, por ejemplo `https://tu-backend.example.com`. `api/[...path].js` reenvía únicamente las rutas del CRM. No pongas contraseñas ni DATABASE_URL en el frontend. El backend debe incluir el dominio del frontend en **CRM_ALLOWED_ORIGINS** y ejecutarse con **NODE_ENV=production**. Así la cookie queda en el mismo sitio y funciona también en navegadores móviles que bloquean cookies de terceros.
+El frontend usa `/api` en producción. `vercel.json` dirige esas rutas a `api/proxy.js`, que reenvía únicamente los endpoints del CRM al backend verificado `https://con-buena-compania-backend.vercel.app`. **BACKEND_URL** es un override opcional para otro entorno. No pongas contraseñas ni DATABASE_URL en el frontend. El backend debe incluir el dominio del frontend en **CRM_ALLOWED_ORIGINS** y ejecutarse con **NODE_ENV=production**. Así la cookie queda en el mismo sitio y funciona también en navegadores móviles que bloquean cookies de terceros.
 
 La aplicación no contiene credenciales de demostración ni listas de clientes ficticios. Si falta la conexión al backend se muestra un mensaje y no se simula un ingreso.
 
 ## Verificación
 
-`npm run check` revisa la sintaxis. `scripts/verify-crm.cjs` prueba el flujo visual con respuestas de API simuladas en 320, 375, 390, 768 y 1440 px; requiere instalar `playwright-core` en `.local/qa` y Chrome local. `scripts/verify-admin-login.cjs` comprueba el ingreso real contra un backend temporal en el puerto 3002 usando el archivo de acceso local del backend, sin cambiar la contraseña inicial ni imprimirla.
+`npm run check` revisa la sintaxis. `scripts/verify-crm.cjs` prueba el flujo visual con respuestas de API simuladas en 320, 375, 390, 768 y 1440 px; requiere instalar `playwright-core` en `.local/qa` y Chrome local. `scripts/verify-admin-login.cjs` comprueba el ingreso real contra un backend temporal en el puerto 3002 usando el archivo de acceso local del backend, sin cambiar la contraseña inicial ni imprimirla. Para comprobar producción, define `CRM_FRONTEND_URL=https://con-buena-compania.vercel.app`; se usará el proxy publicado sin sobrescribir la URL de la API.
 
 ## Ubicación
 
