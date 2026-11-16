@@ -1,12 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-labelledby="title desc">
   <title id="title">Con Buena Compañía</title>
   <desc id="desc">Logo de Con Buena Compañía</desc>
-  <g transform="translate(8 26)">
-    <circle cx="72" cy="78" r="22" fill="#8D209E"/>
-    <circle cx="154" cy="78" r="22" fill="#00AFAE"/>
-    <path d="M29 116c17 39 54 61 94 61 36 0 66-14 91-43" fill="none" stroke="#8D209E" stroke-width="25" stroke-linecap="round"/>
-    <path d="M113 174c46 14 86-3 111-47" fill="none" stroke="#00AFAE" stroke-width="25" stroke-linecap="round"/>
-    <path d="M77 31l-5-18M98 27V8M119 32l11-17" fill="none" stroke="#F7B718" stroke-width="10" stroke-linecap="round"/>
+  <g transform="translate(-75 -20) scale(.42)">
+    <path d="M226 254 C250 318 302 374 377 369 C452 365 494 318 522 251 C514 351 456 427 373 433 C295 440 242 362 226 254Z" fill="#8D209E"/>
+    <circle cx="377" cy="279" r="52" fill="#8D209E"/>
+    <path d="M414 439 C511 441 591 383 650 251 C647 356 576 458 414 439Z" fill="#00B3B8"/>
+    <path d="M570 168 Q557 157 564 137 L578 97 Q588 77 606 86 Q620 95 611 116 L592 160 Q583 179 570 168Z" fill="#FFC400"/>
+    <path d="M622 184 Q609 174 624 154 L660 108 Q677 90 693 105 Q707 118 692 136 L645 181 Q631 193 622 184Z" fill="#FFC400"/>
+    <path d="M667 211 Q655 194 675 184 L730 153 Q753 143 763 162 Q773 181 751 193 L694 219 Q677 226 667 211Z" fill="#FFC400"/>
   </g>
   <text x="270" y="104" font-family="Arial, sans-serif" font-size="68" font-weight="700" fill="#122B5B">Con Buena</text>
   <text x="270" y="176" font-family="Arial, sans-serif" font-size="68" font-weight="700" fill="#8D209E">Compañía</text>
