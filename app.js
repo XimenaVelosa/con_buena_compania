@@ -32,6 +32,35 @@ locationStatus.parentElement.after(locationHelp);
 locationHelp.querySelector('button').addEventListener('click', () => locationButton.click());
 locationStatus.setAttribute('role', 'status');
 locationStatus.setAttribute('aria-live', 'polite');
+const locationNotice = document.createElement('small');
+locationNotice.className = 'field-help';
+locationNotice.innerHTML = 'Al usar esta función se consultará la dirección con Photon (Komoot). Datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>. Revisa y corrige la dirección aproximada antes de guardar.';
+locationStatus.after(locationNotice);
+const addressCache = new Map();
+
+async function resolveAddress(latitude, longitude) {
+  const key = `${latitude},${longitude}`;
+  if (addressCache.has(key)) return addressCache.get(key);
+  const url = new URL(window.CBC_GEOCODING_URL || 'https://photon.komoot.io/reverse');
+  url.search = new URLSearchParams({ lat: latitude, lon: longitude, limit: '1', radius: '0.1' }).toString();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(url, { signal: controller.signal, credentials: 'omit' });
+    if (!response.ok) throw new Error('No se pudo consultar la dirección.');
+    const result = await response.json();
+    const place = result.features?.[0]?.properties;
+    if (!place) throw new Error('No hay dirección disponible en esta zona.');
+    const street = [place.street, place.housenumber].filter(Boolean).join(' ');
+    const parts = [street || place.name, place.district, place.city || place.county, place.state, place.country];
+    const address = [...new Set(parts.filter((part) => typeof part === 'string' && part.trim()))].join(', ');
+    if (!address) throw new Error('La respuesta no contiene una dirección.');
+    addressCache.set(key, address);
+    return address;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 locationButton.addEventListener('click', () => {
   locationHelp.hidden = true;
@@ -43,16 +72,28 @@ locationButton.addEventListener('click', () => {
   locationButton.disabled = true;
   locationButton.textContent = 'Obteniendo ubicación…';
   locationStatus.textContent = 'Acepta el permiso de ubicación para continuar.';
-  navigator.geolocation.getCurrentPosition((position) => {
+  navigator.geolocation.getCurrentPosition(async (position) => {
     const latitude = position.coords.latitude.toFixed(6);
     const longitude = position.coords.longitude.toFixed(6);
     form.elements.visitLatitude.value = latitude;
     form.elements.visitLongitude.value = longitude;
-    form.elements.visitLocation.value = `Ubicación actual (${latitude}, ${longitude})`;
-    locationButton.disabled = false;
-    locationButton.textContent = '✓ Ubicación agregada';
-    locationStatus.textContent = 'Coordenadas guardadas en el informe.';
+    const locationField = form.elements.visitLocation;
+    if (/^Ubicación actual \(/.test(locationField.value)) locationField.value = '';
+    const previousAddress = locationField.value;
+    locationButton.textContent = 'Buscando dirección…';
+    locationStatus.textContent = 'Ubicación capturada. Buscando una dirección cercana…';
     saveDraft();
+    try {
+      const address = await resolveAddress(latitude, longitude);
+      if (locationField.value === previousAddress) locationField.value = address;
+      locationStatus.textContent = 'Revisa la dirección aproximada. Las coordenadas se incluirán por separado al guardar el informe.';
+    } catch {
+      locationStatus.textContent = 'La ubicación fue capturada, pero no se pudo obtener la dirección. Escríbela manualmente; las coordenadas se incluirán al guardar.';
+    } finally {
+      locationButton.disabled = false;
+      locationButton.textContent = '✓ Ubicación capturada';
+      saveDraft();
+    }
   }, (error) => {
     locationButton.disabled = false;
     locationButton.textContent = '⌖ Usar ubicación actual';
