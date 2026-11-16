@@ -14,6 +14,7 @@ const apiUrl = window.CBC_API_URL || 'http://localhost:3001';
 const multiSelectFields = ['mobilityNeeds', 'independentActivities', 'homeAccessConditions'];
 let currentStep = 0;
 
+function bindLocation(locationField, locationButton, locationStatus, includeVisitCoordinates) {
 const locationHelp = document.createElement('section');
 locationHelp.className = 'location-permission-help wide';
 locationHelp.hidden = true;
@@ -75,9 +76,10 @@ locationButton.addEventListener('click', () => {
   navigator.geolocation.getCurrentPosition(async (position) => {
     const latitude = position.coords.latitude.toFixed(6);
     const longitude = position.coords.longitude.toFixed(6);
-    form.elements.visitLatitude.value = latitude;
-    form.elements.visitLongitude.value = longitude;
-    const locationField = form.elements.visitLocation;
+    if (includeVisitCoordinates) {
+      form.elements.visitLatitude.value = latitude;
+      form.elements.visitLongitude.value = longitude;
+    }
     if (/^Ubicación actual \(/.test(locationField.value)) locationField.value = '';
     const previousAddress = locationField.value;
     locationButton.textContent = 'Buscando dirección…';
@@ -86,9 +88,13 @@ locationButton.addEventListener('click', () => {
     try {
       const address = await resolveAddress(latitude, longitude);
       if (locationField.value === previousAddress) locationField.value = address;
-      locationStatus.textContent = 'Revisa la dirección aproximada. Las coordenadas se incluirán por separado al guardar el informe.';
+      locationStatus.textContent = includeVisitCoordinates
+        ? 'Revisa la dirección aproximada. Las coordenadas se incluirán por separado al guardar el informe.'
+        : 'Revisa y confirma la dirección de residencia aproximada antes de guardar.';
     } catch {
-      locationStatus.textContent = 'La ubicación fue capturada, pero no se pudo obtener la dirección. Escríbela manualmente; las coordenadas se incluirán al guardar.';
+      locationStatus.textContent = includeVisitCoordinates
+        ? 'La ubicación fue capturada, pero no se pudo obtener la dirección. Escríbela manualmente; las coordenadas se incluirán al guardar.'
+        : 'No se pudo obtener la dirección de residencia. Escríbela manualmente o vuelve a intentar.';
     } finally {
       locationButton.disabled = false;
       locationButton.textContent = '✓ Ubicación capturada';
@@ -108,6 +114,17 @@ locationButton.addEventListener('click', () => {
     }
   }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
 });
+}
+
+bindLocation(form.elements.visitLocation, locationButton, locationStatus, true);
+bindLocation(form.elements.address, document.querySelector('#residence-location-button'), document.querySelector('#residence-location-status'), false);
+
+function prefillResidenceAddress() {
+  if (!form.elements.address.value.trim() && form.elements.visitLocation.value.trim() && !/^Ubicación actual \(/.test(form.elements.visitLocation.value)) {
+    form.elements.address.value = form.elements.visitLocation.value;
+    saveDraft();
+  }
+}
 
 function collectFormData() {
   const data = {};
@@ -126,6 +143,7 @@ function collectFormData() {
 }
 
 function setStep(step) {
+  if (step === 1) prefillResidenceAddress();
   currentStep = step;
   panels.forEach((panel, index) => panel.classList.toggle('active', index === step));
   steps.forEach((item, index) => { item.classList.toggle('active', index === step); item.classList.toggle('complete', index < step); });
