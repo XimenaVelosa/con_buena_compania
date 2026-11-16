@@ -43,7 +43,7 @@ body{overflow-x:hidden}.shell{width:100%;padding:14px 10px 28px}.shell:after{opa
   .field-grid>label{width:100%;min-width:0;max-width:100%;overflow:hidden}
   .field-grid>label>input:not([type=hidden]),.field-grid>label>textarea{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
   .field-grid>label>input:not([type=hidden]){height:52px;min-height:52px;padding:0 14px;border-radius:12px;font-size:16px}
-  .field-grid>label>input[type=date],.field-grid>label>input[type=time]{appearance:auto;-webkit-appearance:auto}
+  .field-grid>label>input[type=date],.field-grid>label>input[type=time]{appearance:none;-webkit-appearance:none;text-align:left;padding-right:14px;overflow:hidden}
   .field-grid>label>textarea{min-height:96px;padding:14px 16px;border-radius:12px}
   .field-grid>label>.location-control{width:100%;min-width:0;max-width:100%}
 }
