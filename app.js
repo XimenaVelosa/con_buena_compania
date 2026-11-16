@@ -9,8 +9,7 @@ const errorMessage = document.querySelector('#form-error');
 const successMessage = document.querySelector('#success-message');
 const locationButton = document.querySelector('#location-button');
 const locationStatus = document.querySelector('#location-status');
-const draftKey = 'cbc-client-draft';
-const apiUrl = window.CBC_API_URL || 'http://localhost:3001';
+const draftKey = () => `cbc-client-draft:${window.CBC_CRM?.user?.id || 'pending'}`;
 const multiSelectFields = ['mobilityNeeds', 'independentActivities', 'homeAccessConditions'];
 let currentStep = 0;
 
@@ -64,6 +63,8 @@ async function resolveAddress(latitude, longitude) {
 }
 
 locationButton.addEventListener('click', () => {
+  const requestingUserId = window.CBC_CRM?.user?.id;
+  if (!requestingUserId) return;
   locationHelp.hidden = true;
   if (!window.isSecureContext) {
     locationStatus.textContent = 'Abre el formulario con HTTPS para utilizar la ubicación. Puedes escribir el lugar manualmente.';
@@ -74,6 +75,7 @@ locationButton.addEventListener('click', () => {
   locationButton.textContent = 'Obteniendo ubicación…';
   locationStatus.textContent = 'Acepta el permiso de ubicación para continuar.';
   navigator.geolocation.getCurrentPosition(async (position) => {
+    if (window.CBC_CRM?.user?.id !== requestingUserId) return;
     const latitude = position.coords.latitude.toFixed(6);
     const longitude = position.coords.longitude.toFixed(6);
     if (includeVisitCoordinates) {
@@ -87,6 +89,7 @@ locationButton.addEventListener('click', () => {
     saveDraft();
     try {
       const address = await resolveAddress(latitude, longitude);
+      if (window.CBC_CRM?.user?.id !== requestingUserId) return;
       if (locationField.value === previousAddress) locationField.value = address;
       locationStatus.textContent = includeVisitCoordinates
         ? 'Revisa la dirección aproximada. Las coordenadas se incluirán por separado al guardar el informe.'
@@ -152,10 +155,13 @@ function setStep(step) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function saveDraft() { localStorage.setItem(draftKey, JSON.stringify(collectFormData())); }
+function saveDraft() {
+  if (!window.CBC_CRM?.user) return;
+  try { sessionStorage.setItem(draftKey(), JSON.stringify(collectFormData())); } catch { /* The form stays usable when browser storage is unavailable. */ }
+}
 function restoreDraft() {
-  const raw = localStorage.getItem(draftKey); if (!raw) return;
-  const data = JSON.parse(raw);
+  let data;
+  try { const raw = sessionStorage.getItem(draftKey()); if (!raw) return; data = JSON.parse(raw); } catch { return; }
   Object.entries(data).forEach(([key, value]) => {
     const fields = [...form.querySelectorAll(`[name="${key}"]`)]; if (!fields.length) return;
     if (fields[0].type === 'checkbox') {
@@ -179,13 +185,32 @@ steps.forEach((step) => step.addEventListener('click', () => { const target = Nu
 form.addEventListener('input', saveDraft); form.addEventListener('change', saveDraft);
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); if (!validateCurrentStep()) return;
+  if (!form.elements.fullName.value.trim()) { setStep(1); form.elements.fullName.focus(); return; }
   saveButton.disabled = true; saveButton.textContent = 'Guardando…';
   try {
-    const response = await fetch(`${apiUrl}/clients`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(collectFormData()) });
-    if (!response.ok) throw new Error('No se pudo guardar el informe.');
-    form.hidden = true; document.querySelector('.progress').hidden = true; successMessage.hidden = false; localStorage.removeItem(draftKey); window.scrollTo({ top: 0, behavior: 'smooth' });
+    await window.CBC_CRM.api('/clients', { method: 'POST', body: JSON.stringify(collectFormData()) });
+    form.hidden = true; document.querySelector('.progress').hidden = true; successMessage.hidden = false;
+    try { sessionStorage.removeItem(draftKey()); } catch { /* Storage may be disabled. */ }
+    document.dispatchEvent(new Event('cbc:visit-saved'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) { errorMessage.textContent = error.message; }
-  finally { saveButton.disabled = false; saveButton.textContent = 'Guardar cliente'; }
+  finally { saveButton.disabled = false; saveButton.textContent = 'Guardar y finalizar →'; }
 });
-document.querySelector('#new-client-button').addEventListener('click', () => window.location.reload());
-restoreDraft(); setStep(0);
+function resetVisit() {
+  form.reset();
+  form.hidden = false;
+  document.querySelector('.progress').hidden = false;
+  successMessage.hidden = true;
+  document.querySelectorAll('.location-permission-help').forEach((help) => { help.hidden = true; });
+  locationStatus.textContent = 'Se solicitará permiso al navegador para obtener la dirección de la visita.';
+  document.querySelector('#residence-location-status').textContent = 'Se completará con la dirección de la visita si está vacía. Puedes editarla o usar otra ubicación.';
+  [locationButton, document.querySelector('#residence-location-button')].forEach((button) => { button.textContent = '⌖ Usar ubicación actual'; });
+  setStep(0);
+}
+document.querySelector('#new-client-button').addEventListener('click', resetVisit);
+document.addEventListener('cbc:authenticated', () => { resetVisit(); restoreDraft(); });
+document.addEventListener('cbc:logout', (event) => {
+  if (event.detail?.id) { try { sessionStorage.removeItem(`cbc-client-draft:${event.detail.id}`); } catch { /* Storage may be disabled. */ } }
+  resetVisit();
+});
+setStep(0);
