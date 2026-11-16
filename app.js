@@ -7,10 +7,34 @@ const nextButton = document.querySelector('#next-button');
 const saveButton = document.querySelector('#save-button');
 const errorMessage = document.querySelector('#form-error');
 const successMessage = document.querySelector('#success-message');
+const locationButton = document.querySelector('#location-button');
+const locationStatus = document.querySelector('#location-status');
 const draftKey = 'cbc-client-draft';
 const apiUrl = window.CBC_API_URL || 'http://localhost:3001';
 const multiSelectFields = ['mobilityNeeds', 'independentActivities', 'homeAccessConditions'];
 let currentStep = 0;
+
+locationButton.addEventListener('click', () => {
+  if (!navigator.geolocation) { locationStatus.textContent = 'Este navegador no permite obtener la ubicación.'; return; }
+  locationButton.disabled = true;
+  locationButton.textContent = 'Obteniendo ubicación…';
+  locationStatus.textContent = 'Acepta el permiso de ubicación para continuar.';
+  navigator.geolocation.getCurrentPosition((position) => {
+    const latitude = position.coords.latitude.toFixed(6);
+    const longitude = position.coords.longitude.toFixed(6);
+    form.elements.visitLatitude.value = latitude;
+    form.elements.visitLongitude.value = longitude;
+    form.elements.visitLocation.value = `Ubicación actual (${latitude}, ${longitude})`;
+    locationButton.disabled = false;
+    locationButton.textContent = '✓ Ubicación agregada';
+    locationStatus.textContent = 'Coordenadas guardadas en el informe.';
+    saveDraft();
+  }, () => {
+    locationButton.disabled = false;
+    locationButton.textContent = '⌖ Usar ubicación actual';
+    locationStatus.textContent = 'No fue posible obtener la ubicación. Revisa el permiso del navegador.';
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
+});
 
 function collectFormData() {
   const data = {};
@@ -23,6 +47,8 @@ function collectFormData() {
   }
   for (const field of multiSelectFields) data[field] = JSON.stringify(data[field] || []);
   if (data.approximateAge) data.approximateAge = Number(data.approximateAge);
+  if (data.visitLatitude) data.visitLatitude = Number(data.visitLatitude);
+  if (data.visitLongitude) data.visitLongitude = Number(data.visitLongitude);
   return data;
 }
 
