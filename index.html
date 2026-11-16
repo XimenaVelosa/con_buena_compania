@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#13294b" />
+    <title>Con Buena Compañía · Cliente</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="brand-header">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div>
+          <p class="eyebrow">CON BUENA COMPAÑÍA S.A.S.</p>
+          <p class="confidential">Uso interno y confidencial</p>
+        </div>
+      </header>
+
+      <section class="intro">
+        <p class="eyebrow purple">VISITA INICIAL</p>
+        <h1>Conozcamos a la persona</h1>
+        <p>Registra la información básica de la visita de manera tranquila y respetuosa.</p>
+      </section>
+
+      <nav class="progress" aria-label="Progreso del formulario">
+        <div class="progress-line"><span id="progress-line-fill"></span></div>
+        <button class="progress-step active" data-step="0"><span>01</span><small>Visita</small></button>
+        <button class="progress-step" data-step="1"><span>02</span><small>Persona</small></button>
+        <button class="progress-step" data-step="2"><span>03</span><small>Solicitud</small></button>
+      </nav>
+
+      <form id="client-form" novalidate>
+        <section class="form-step active" data-panel="0">
+          <div class="section-heading"><span class="section-number">01</span><div><h2>Datos de la visita</h2><p>Cuéntanos cuándo y dónde ocurre este primer encuentro.</p></div></div>
+          <div class="field-grid">
+            <label>Fecha<input name="visitDate" type="date" /></label>
+            <label>Hora<input name="visitTime" type="time" /></label>
+            <label class="wide">Lugar / zona<input name="visitLocation" type="text" placeholder="Ej. Chapinero, Bogotá" /></label>
+            <label class="wide">Nombre de quien realiza la visita<input name="visitAgentName" type="text" placeholder="Nombre completo" /></label>
+          </div>
+        </section>
+
+        <section class="form-step" data-panel="1">
+          <div class="section-heading"><span class="section-number">02</span><div><h2>Información de la persona</h2><p>Esta información nos ayuda a acompañar con cuidado y respeto.</p></div></div>
+          <div class="field-grid">
+            <label class="wide">Nombre completo<input name="fullName" type="text" required placeholder="Nombre de la persona usuaria" /></label>
+            <label>Edad aproximada<input name="approximateAge" type="number" min="0" max="120" placeholder="Años" /></label>
+            <label>Teléfono<input name="phone" type="tel" placeholder="Número de contacto" /></label>
+            <label class="wide">Dirección<input name="address" type="text" placeholder="Dirección de residencia" /></label>
+          </div>
+        </section>
+
+        <section class="form-step" data-panel="2">
+          <div class="section-heading"><span class="section-number">03</span><div><h2>Solicitud y responsables</h2><p>Completa los datos de las personas que participan en la solicitud.</p></div></div>
+          <div class="field-grid">
+            <label>Persona que solicita<input name="requesterName" type="text" placeholder="Nombre completo" /></label>
+            <label>Parentesco<input name="requesterRelationship" type="text" placeholder="Ej. hija, familiar" /></label>
+            <label>Persona responsable del pago<input name="payerName" type="text" placeholder="Nombre completo" /></label>
+          </div>
+          <label class="check-row"><input name="knowsVisit" type="checkbox" /><span>La persona usuaria conoce la visita y acepta conversar sobre el servicio.</span></label>
+          <div id="form-error" class="form-error" role="alert"></div>
+        </section>
+
+        <footer class="form-actions">
+          <button type="button" id="back-button" class="button secondary" hidden>Volver</button>
+          <div class="action-spacer"></div>
+          <button type="button" id="next-button" class="button primary">Continuar</button>
+          <button type="submit" id="save-button" class="button primary" hidden>Guardar cliente</button>
+        </footer>
+      </form>
+
+      <div id="success-message" class="success-message" hidden>
+        <span class="success-icon">✓</span>
+        <div><h2>Información guardada</h2><p>El registro inicial del cliente quedó guardado correctamente.</p></div>
+        <button type="button" id="new-client-button" class="button secondary">Nuevo registro</button>
+      </div>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
