@@ -36,13 +36,16 @@ body{overflow-x:hidden}.shell{width:100%;padding:14px 10px 28px}.shell:after{opa
 .button-label{font-size:inherit!important;line-height:inherit}.button-arrow{font-size:28px!important;line-height:0;vertical-align:-2px}
 @media(max-width:700px){.button-arrow{font-size:22px!important}}
 @media(max-width:700px){
-  .field-grid{width:100%;grid-template-columns:minmax(0,1fr)}
+  .shell{width:100vw;max-width:100vw;overflow-x:hidden}
+  form{width:100%;max-width:100%;margin:0;overflow:hidden}
+  .form-step{width:100%;max-width:100%;padding-inline:16px;overflow:hidden}
+  .field-grid{width:100%;max-width:100%;grid-template-columns:minmax(0,1fr);overflow:hidden}
   .field-grid>label{width:100%;min-width:0;max-width:100%;overflow:hidden}
   .field-grid>label>input:not([type=hidden]),.field-grid>label>textarea{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
   .field-grid>label>input:not([type=hidden]){height:52px;min-height:52px;padding:0 14px;border-radius:12px;font-size:16px}
   .field-grid>label>input[type=date],.field-grid>label>input[type=time]{appearance:auto;-webkit-appearance:auto}
   .field-grid>label>textarea{min-height:96px;padding:14px 16px;border-radius:12px}
-  .field-grid>label>.location-control{width:100%;min-width:0}
+  .field-grid>label>.location-control{width:100%;min-width:0;max-width:100%}
 }
 @media(max-width:700px){
   .form-actions{justify-content:flex-end}
