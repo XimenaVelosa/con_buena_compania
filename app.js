@@ -14,7 +14,31 @@ const apiUrl = window.CBC_API_URL || 'http://localhost:3001';
 const multiSelectFields = ['mobilityNeeds', 'independentActivities', 'homeAccessConditions'];
 let currentStep = 0;
 
+const locationHelp = document.createElement('section');
+locationHelp.className = 'location-permission-help wide';
+locationHelp.hidden = true;
+locationHelp.setAttribute('aria-label', 'Activar permiso de ubicación');
+locationHelp.innerHTML = `
+  <h3>Activa el permiso de ubicación</h3>
+  <p>En el menú del sitio junto a la dirección web, abre los permisos y permite la ubicación. Si sigue bloqueada, revisa también los permisos del dispositivo:</p>
+  <ul>
+    <li><strong>iPhone / iPad:</strong> Ajustes → Privacidad y seguridad → Localización. Activa la localización y permite el acceso al navegador mientras lo usas.</li>
+    <li><strong>Android:</strong> Ajustes → Aplicaciones → tu navegador → Permisos → Ubicación → Permitir mientras se usa.</li>
+    <li><strong>Computador:</strong> revisa el permiso de ubicación del sitio y el acceso a la ubicación en los ajustes del sistema.</li>
+  </ul>
+  <p>Si abriste el formulario desde WhatsApp u otra aplicación, ábrelo en Safari o Chrome. Después vuelve aquí y pulsa «Volver a intentar». También puedes escribir el lugar manualmente.</p>
+  <button type="button" class="location-button">Volver a intentar</button>`;
+locationStatus.parentElement.after(locationHelp);
+locationHelp.querySelector('button').addEventListener('click', () => locationButton.click());
+locationStatus.setAttribute('role', 'status');
+locationStatus.setAttribute('aria-live', 'polite');
+
 locationButton.addEventListener('click', () => {
+  locationHelp.hidden = true;
+  if (!window.isSecureContext) {
+    locationStatus.textContent = 'Abre el formulario con HTTPS para utilizar la ubicación. Puedes escribir el lugar manualmente.';
+    return;
+  }
   if (!navigator.geolocation) { locationStatus.textContent = 'Este navegador no permite obtener la ubicación.'; return; }
   locationButton.disabled = true;
   locationButton.textContent = 'Obteniendo ubicación…';
@@ -29,10 +53,18 @@ locationButton.addEventListener('click', () => {
     locationButton.textContent = '✓ Ubicación agregada';
     locationStatus.textContent = 'Coordenadas guardadas en el informe.';
     saveDraft();
-  }, () => {
+  }, (error) => {
     locationButton.disabled = false;
     locationButton.textContent = '⌖ Usar ubicación actual';
     locationStatus.textContent = 'No fue posible obtener la ubicación. Revisa el permiso del navegador.';
+    if (error.code === 1) {
+      locationStatus.textContent = 'El acceso a la ubicación está bloqueado. Sigue las instrucciones para activarlo y vuelve a intentar.';
+      locationHelp.hidden = false;
+    } else if (error.code === 3) {
+      locationStatus.textContent = 'La ubicación tardó demasiado. Vuelve a intentar; si continúa, revisa que la localización del dispositivo esté activada.';
+    } else {
+      locationStatus.textContent = 'No se pudo determinar tu ubicación. Comprueba la localización del dispositivo y vuelve a intentar, o escribe el lugar manualmente.';
+    }
   }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
 });
 
