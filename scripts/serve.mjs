@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-const assets = { '/': 'text/html', '/index.html': 'text/html', '/styles.css': 'text/css', '/crm.css': 'text/css', '/app.js': 'text/javascript', '/crm.js': 'text/javascript', '/config.js': 'text/javascript', '/brand-logo.png': 'image/png' };
+const assets = { '/': 'text/html', '/index.html': 'text/html', '/styles.css': 'text/css', '/crm.css': 'text/css', '/app.js': 'text/javascript', '/crm.js': 'text/javascript', '/emergency-contacts.js': 'text/javascript', '/config.js': 'text/javascript', '/brand-logo.png': 'image/png' };
 const root = new URL('../', import.meta.url);
 const port = Number(process.env.PORT || 4173);
 createServer(async (req, res) => {

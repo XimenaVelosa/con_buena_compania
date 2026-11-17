@@ -19,6 +19,7 @@ const path = require('node:path');
       let changed = false;
       const user = { id: 'qa-user', username: 'admin', displayName: 'Administración', role: 'admin', mustChangePassword: true };
       const record = { id: '11111111-1111-4111-8111-111111111111', fullName: 'Cliente de prueba', phone: '3001234567', address: 'Calle 10 #20-30, Bogotá', visitDate: '2026-11-16', visitTime: '08:55', visitLocation: 'Calle 10 #20-30, Bogotá', visitAgentName: 'Responsable de visita', createdAt: '2026-11-16T10:00:00Z', independentActivities: '["Lectura"]' };
+      record.emergencyContacts = JSON.stringify([{ type: 'guardian', fullName: 'Acudiente QA', idNumber: '001234567', address: 'Calle del acudiente 20', phone: '+57 300 123 4567' }, { type: 'additional', fullName: 'Contacto QA', idNumber: '00098765', address: 'Carrera de emergencia 30', phone: '+57 311 222 3344' }]);
       await page.route('http://127.0.0.1:3001/**', async (route) => {
         const url = new URL(route.request().url());
         let status = 200;
@@ -34,6 +35,7 @@ const path = require('node:path');
           assert.equal(saved.guardianIdNumber, '001234567');
           assert.equal(saved.guardianAddress, 'Calle del acudiente 20');
           assert.equal(saved.guardianPhone, '+57 300 123 4567');
+          assert.deepEqual(JSON.parse(saved.emergencyContacts), JSON.parse(record.emergencyContacts));
           data = record;
         }
         else if (url.pathname === '/clients') data = [record];
@@ -70,6 +72,8 @@ const path = require('node:path');
       await page.locator('#client-records [data-detail]').click();
       await page.locator('#detail-content .detail-section').first().waitFor();
       assert.equal(await page.locator('#detail-content .detail-section').count(), 7);
+      assert.ok((await page.locator('#detail-content').textContent()).includes('Contacto QA'));
+      assert.ok(!(await page.locator('#detail-content').textContent()).includes('[object Object]'));
       await checkBounds('detail');
       await page.locator('#close-detail').click();
       await page.evaluate(() => { location.hash = 'new-visit'; });
@@ -97,6 +101,39 @@ const path = require('node:path');
           await page.locator('[name=guardianAddress]').fill('Calle del acudiente 20');
           await page.locator('[name=guardianPhone]').fill('+57 300 123 4567');
           if (width === 390) await page.screenshot({ path: path.join(artifacts, 'guardian-mobile.png'), fullPage: true });
+        }
+        if (stage === 6) {
+          await page.locator('#emergency-use-guardian').check();
+          assert.ok((await page.locator('#emergency-guardian-summary').textContent()).includes('Acudiente QA'));
+          await page.locator('#emergency-add-other').check();
+          await page.locator('#save-button').click();
+          assert.ok((await page.locator('#emergency-contact-error').textContent()).length > 0);
+          await page.locator('[data-emergency-field=fullName]').fill('Contacto QA');
+          await page.locator('[data-emergency-field=idNumber]').fill('00098765');
+          await page.locator('[data-emergency-field=address]').fill('Carrera de emergencia 30');
+          await page.locator('[data-emergency-field=phone]').fill('+57 311 222 3344');
+          assert.equal(await page.evaluate(() => JSON.parse(window.CBC_EMERGENCY.serialize()).length), 2);
+          await page.locator('#emergency-add-other').uncheck();
+          assert.equal(await page.evaluate(() => JSON.parse(window.CBC_EMERGENCY.serialize()).length), 1);
+          await page.locator('#emergency-add-other').check();
+          assert.equal(await page.locator('[data-emergency-field=fullName]').inputValue(), 'Contacto QA');
+          await page.locator('#emergency-use-guardian').uncheck();
+          assert.equal(await page.evaluate(() => JSON.parse(window.CBC_EMERGENCY.serialize())[0].type), 'additional');
+          await page.locator('#emergency-use-guardian').check();
+          await page.locator('#emergency-edit-guardian').click();
+          await page.locator('[name=payerName]').fill('Acudiente actualizado');
+          await page.locator('.progress-step[data-step="6"]').click();
+          assert.ok((await page.locator('#emergency-guardian-summary').textContent()).includes('Acudiente actualizado'));
+          await page.locator('#emergency-edit-guardian').click();
+          await page.locator('[name=payerName]').fill('Acudiente QA');
+          await page.locator('.progress-step[data-step="6"]').click();
+          await page.reload();
+          await page.locator('#crm-app').waitFor({ state: 'visible' });
+          await page.locator('.progress-step[data-step="6"]').click();
+          assert.equal(await page.locator('#emergency-use-guardian').isChecked(), true);
+          assert.equal(await page.locator('#emergency-add-other').isChecked(), true);
+          assert.equal(await page.locator('[data-emergency-field=fullName]').inputValue(), 'Contacto QA');
+          if (width === 390) await page.screenshot({ path: path.join(artifacts, 'emergency-mobile.png'), fullPage: true });
         }
         await checkBounds(`visit ${stage + 1}`);
       }

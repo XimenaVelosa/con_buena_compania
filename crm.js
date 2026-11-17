@@ -147,6 +147,19 @@
     ['07 · Cierre', [['outingConditions', 'Condiciones para salidas'], ['transportPlan', 'Transporte'], ['emergencyContacts', 'Contactos de emergencia'], ['preferences', 'Preferencias'], ['visitConclusion', 'Conclusión'], ['recommendedServices', 'Servicios recomendados'], ['nextContact', 'Próximo contacto'], ['finalNotes', 'Observaciones finales']]],
   ];
 
+  function emergencyContactsText(value) {
+    let contacts;
+    try { contacts = JSON.parse(value); } catch { return fieldText(value); }
+    if (!Array.isArray(contacts)) return fieldText(value);
+    if (!contacts.length) return 'Sin contactos registrados';
+    return contacts.map((contact) => {
+      if (!contact || typeof contact !== 'object') return String(contact ?? '');
+      if (contact.type === 'note') return `Notas anteriores: ${typeof contact.text === 'string' ? contact.text : ''}`;
+      const title = contact.type === 'guardian' ? 'Acudiente' : 'Contacto de emergencia adicional';
+      return [title, `Nombre: ${contact.fullName || 'Sin registrar'}`, `Cédula: ${contact.idNumber || 'Sin registrar'}`, `Dirección: ${contact.address || 'Sin registrar'}`, `Celular: ${contact.phone || 'Sin registrar'}`].join('\n');
+    }).join('\n\n');
+  }
+
   function fieldText(value) {
     if (typeof value === 'boolean') return value ? 'Sí' : 'No';
     if (value === null || value === undefined || value === '') return 'Sin registrar';
@@ -165,7 +178,7 @@
       const record = await api(`/clients/${encodeURIComponent(id)}`);
       if (detailId !== id || !dialog.open || !user) return;
       $('#detail-title').textContent = record.fullName;
-      $('#detail-content').innerHTML = sections.map(([title, fields]) => `<section class="detail-section"><h3>${escape(title)}</h3><dl>${fields.map(([key, label]) => `<div><dt>${escape(label)}</dt><dd>${escape(key === 'visitDate' ? date(record[key]) : fieldText(record[key]))}</dd></div>`).join('')}</dl></section>`).join('');
+      $('#detail-content').innerHTML = sections.map(([title, fields]) => `<section class="detail-section"><h3>${escape(title)}</h3><dl>${fields.map(([key, label]) => `<div><dt>${escape(label)}</dt><dd>${escape(key === 'visitDate' ? date(record[key]) : key === 'emergencyContacts' ? emergencyContactsText(record[key]) : fieldText(record[key]))}</dd></div>`).join('')}</dl></section>`).join('');
     } catch (error) {
       if (dialog.open && detailId === id) { $('#detail-title').textContent = 'No se pudo abrir la ficha'; $('#detail-content').textContent = error.message; }
     }

@@ -139,6 +139,7 @@ function collectFormData() {
     } else if (field.value) data[field.name] = field.value;
   }
   for (const field of multiSelectFields) data[field] = JSON.stringify(data[field] || []);
+  data.emergencyContacts = window.CBC_EMERGENCY.serialize();
   if (data.approximateAge) data.approximateAge = Number(data.approximateAge);
   if (data.visitLatitude) data.visitLatitude = Number(data.visitLatitude);
   if (data.visitLongitude) data.visitLongitude = Number(data.visitLongitude);
@@ -147,6 +148,7 @@ function collectFormData() {
 
 function setStep(step) {
   if (step === 1) prefillResidenceAddress();
+  if (step === 6) window.CBC_EMERGENCY.sync();
   currentStep = step;
   panels.forEach((panel, index) => panel.classList.toggle('active', index === step));
   steps.forEach((item, index) => { item.classList.toggle('active', index === step); item.classList.toggle('complete', index < step); });
@@ -157,7 +159,7 @@ function setStep(step) {
 
 function saveDraft() {
   if (!window.CBC_CRM?.user) return;
-  try { sessionStorage.setItem(draftKey(), JSON.stringify(collectFormData())); } catch { /* The form stays usable when browser storage is unavailable. */ }
+  try { sessionStorage.setItem(draftKey(), JSON.stringify({ ...collectFormData(), _emergencyDraft: window.CBC_EMERGENCY.draft() })); } catch { /* The form stays usable when browser storage is unavailable. */ }
 }
 function restoreDraft() {
   let data;
@@ -172,8 +174,10 @@ function restoreDraft() {
     }
     else fields[0].value = value;
   });
+  window.CBC_EMERGENCY.restore(data.emergencyContacts, data._emergencyDraft);
 }
 function validateCurrentStep() {
+  if (currentStep === 6) return window.CBC_EMERGENCY.validate();
   if (currentStep !== 1) return true;
   const fullName = form.elements.fullName.value.trim();
   if (!fullName) { errorMessage.textContent = 'Escribe el nombre completo de la persona usuaria para continuar.'; form.elements.fullName.focus(); return false; }
@@ -198,6 +202,7 @@ form.addEventListener('submit', async (event) => {
 });
 function resetVisit() {
   form.reset();
+  window.CBC_EMERGENCY.reset();
   form.hidden = false;
   document.querySelector('.progress').hidden = false;
   successMessage.hidden = true;
@@ -208,6 +213,7 @@ function resetVisit() {
   setStep(0);
 }
 document.querySelector('#new-client-button').addEventListener('click', resetVisit);
+document.addEventListener('cbc:edit-guardian', () => { saveDraft(); setStep(2); form.elements.payerName.focus(); });
 document.addEventListener('cbc:authenticated', () => { resetVisit(); restoreDraft(); });
 document.addEventListener('cbc:logout', (event) => {
   if (event.detail?.id) { try { sessionStorage.removeItem(`cbc-client-draft:${event.detail.id}`); } catch { /* Storage may be disabled. */ } }

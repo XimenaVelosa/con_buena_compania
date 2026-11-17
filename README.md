@@ -18,7 +18,11 @@ La aplicación no contiene credenciales de demostración ni listas de clientes f
 
 `npm run check` revisa la sintaxis. `scripts/verify-crm.cjs` prueba el flujo visual con respuestas de API simuladas en 320, 375, 390, 768 y 1440 px; requiere instalar `playwright-core` en `.local/qa` y Chrome local. `scripts/verify-admin-login.cjs` comprueba el ingreso real contra un backend temporal en el puerto 3002 usando el archivo de acceso local del backend, sin cambiar la contraseña inicial ni imprimirla. Para comprobar producción, define `CRM_FRONTEND_URL=https://con-buena-compania.vercel.app`; se usará el proxy publicado sin sobrescribir la URL de la API.
 
-## Ubicación
+## Contactos de emergencia
+
+El panel 7 permite seleccionar al acudiente del panel 3, agregar un contacto adicional o ambas opciones. Cada contacto incluye nombre, cédula, dirección y celular. Se serializan como una lista JSON en el campo de texto `emergencyContacts` existente; no se requiere una migración de base de datos. Los registros antiguos de texto libre siguen mostrándose en la ficha. Los borradores guardan también el estado de las opciones y conservan los campos del contacto adicional si se desmarca temporalmente.
+
+## Ubicación actual
 
 La ubicación actual conserva `visitLatitude` y `visitLongitude` como campos separados y completa `visitLocation` con una dirección aproximada editable. Se consulta Photon únicamente al pulsar el botón; si falla, las coordenadas se conservan y la dirección puede ingresarse manualmente.
 
