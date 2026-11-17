@@ -28,7 +28,14 @@ const path = require('node:path');
         else if (url.pathname === '/auth/change-password') { changed = true; data = { user: { ...user, mustChangePassword: false } }; }
         else if (url.pathname === '/auth/logout') { authenticated = false; data = { ok: true }; }
         else if (url.pathname === '/auth/session') data = { user: { ...user, mustChangePassword: !changed } };
-        else if (url.pathname === '/clients' && route.request().method() === 'POST') data = record;
+        else if (url.pathname === '/clients' && route.request().method() === 'POST') {
+          const saved = route.request().postDataJSON();
+          assert.equal(saved.payerName, 'Acudiente QA');
+          assert.equal(saved.guardianIdNumber, '001234567');
+          assert.equal(saved.guardianAddress, 'Calle del acudiente 20');
+          assert.equal(saved.guardianPhone, '+57 300 123 4567');
+          data = record;
+        }
         else if (url.pathname === '/clients') data = [record];
         else data = record;
         await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data), headers: { 'Access-Control-Allow-Origin': 'http://127.0.0.1:4173', 'Access-Control-Allow-Credentials': 'true' } });
@@ -82,7 +89,17 @@ const path = require('node:path');
       await page.locator('#back-button').click();
       await page.locator('#next-button').click();
       assert.equal(await page.locator('[name=address]').inputValue(), 'Dirección distinta');
-      for (let stage = 2; stage < 7; stage++) { await page.locator('#next-button').click(); await checkBounds(`visit ${stage + 1}`); }
+      for (let stage = 2; stage < 7; stage++) {
+        await page.locator('#next-button').click();
+        if (stage === 2) {
+          await page.locator('[name=payerName]').fill('Acudiente QA');
+          await page.locator('[name=guardianIdNumber]').fill('001234567');
+          await page.locator('[name=guardianAddress]').fill('Calle del acudiente 20');
+          await page.locator('[name=guardianPhone]').fill('+57 300 123 4567');
+          if (width === 390) await page.screenshot({ path: path.join(artifacts, 'guardian-mobile.png'), fullPage: true });
+        }
+        await checkBounds(`visit ${stage + 1}`);
+      }
       await page.locator('#save-button').click();
       await page.locator('#success-message').waitFor({ state: 'visible' });
       await checkBounds('saved');

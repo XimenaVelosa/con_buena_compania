@@ -140,7 +140,7 @@
   const sections = [
     ['01 · Datos de la visita', [['visitDate', 'Fecha'], ['visitTime', 'Hora'], ['visitLocation', 'Lugar / zona'], ['visitAgentName', 'Responsable de la visita'], ['visitLatitude', 'Latitud'], ['visitLongitude', 'Longitud']]],
     ['02 · Información de la persona', [['fullName', 'Nombre completo'], ['approximateAge', 'Edad aproximada'], ['phone', 'Teléfono'], ['address', 'Dirección de residencia']]],
-    ['03 · Solicitud y responsables', [['requesterName', 'Persona que solicita'], ['requesterRelationship', 'Parentesco'], ['payerName', 'Responsable del pago'], ['knowsVisit', 'Conoce y acepta la visita']]],
+    ['03 · Solicitud y acudiente', [['requesterName', 'Persona que solicita'], ['requesterRelationship', 'Parentesco'], ['payerName', 'Nombre completo del acudiente'], ['guardianIdNumber', 'Cédula del acudiente'], ['guardianAddress', 'Dirección del acudiente'], ['guardianPhone', 'Celular del acudiente'], ['knowsVisit', 'Conoce y acepta la visita']]],
     ['04 · Movilidad', [['mobilityNeeds', 'Movilidad y apoyos'], ['mobilityNotes', 'Observaciones']]],
     ['05 · Autonomía y actividades', [['independentActivities', 'Actividades solicitadas'], ['independenceNotes', 'Observaciones y otras actividades solicitadas']]],
     ['06 · Entorno y seguridad', [['homeAccessConditions', 'Condiciones del entorno'], ['medicationSupport', 'Medicamentos y procedimientos'], ['personalCareSupport', 'Cuidado personal'], ['homeSafetyNotes', 'Seguridad'], ['homeSafetyConditions', 'Condiciones especiales']]],
