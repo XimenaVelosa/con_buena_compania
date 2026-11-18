@@ -140,7 +140,7 @@
   const sections = [
     ['01 · Datos de la visita', [['visitDate', 'Fecha'], ['visitTime', 'Hora'], ['visitLocation', 'Lugar / zona'], ['visitAgentName', 'Responsable de la visita'], ['visitLatitude', 'Latitud'], ['visitLongitude', 'Longitud']]],
     ['02 · Autorización y veracidad', [['dataAuthorization', 'Registro de la autorización']]],
-    ['03 · Información de la persona', [['fullName', 'Nombre completo'], ['approximateAge', 'Edad aproximada'], ['phone', 'Teléfono'], ['address', 'Dirección de residencia']]],
+    ['03 · Información de la persona', [['fullName', 'Nombre completo'], ['approximateAge', 'Edad'], ['phone', 'Teléfono'], ['address', 'Dirección de residencia']]],
     ['04 · Solicitud y acudiente', [['requesterName', 'Persona que solicita'], ['requesterRelationship', 'Parentesco'], ['payerName', 'Nombre completo del acudiente'], ['guardianIdNumber', 'Cédula del acudiente'], ['guardianAddress', 'Dirección del acudiente'], ['guardianPhone', 'Celular del acudiente'], ['knowsVisit', 'Conoce y acepta la visita']]],
     ['05 · Movilidad', [['mobilityNeeds', 'Movilidad y apoyos'], ['mobilityNotes', 'Observaciones']]],
     ['06 · Autonomía y actividades', [['independentActivities', 'Actividades solicitadas'], ['independenceNotes', 'Observaciones y otras actividades solicitadas']]],
