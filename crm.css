@@ -1,4 +1,7 @@
 /* CRM: mobile-first, with a desktop sidebar introduced at 1024px. */
+.crm-back-to-site{display:inline-flex;align-items:center;min-height:44px;color:#7d2b8b;font-size:13px;font-weight:700;text-decoration:none}
+.crm-back-to-site:hover{text-decoration:underline}
+.login-card>.crm-back-to-site{margin-top:10px}
 .mobility-introduction{margin:0 0 22px;color:#52617d;font-size:15px;line-height:1.65}
 .activities-status{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px;background:#edf7f6;border-radius:12px;margin-bottom:22px}
 .activities-status p{flex:1 1 220px;margin:0;color:#52617d;font-size:13px;line-height:1.6}

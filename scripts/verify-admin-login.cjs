@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
     const frontendUrl = process.env.CRM_FRONTEND_URL || 'http://127.0.0.1:4173';
     const apiUrl = process.env.CRM_API_URL || (process.env.CRM_FRONTEND_URL ? null : 'http://127.0.0.1:3002');
     if (apiUrl) await page.addInitScript((url) => { window.CBC_API_URL = url; }, apiUrl);
-    await page.goto(frontendUrl);
+    await page.goto(new URL('/crm', frontendUrl).href);
     await page.locator('#login-user').fill(username);
     await page.locator('#login-password').fill(password);
     await page.locator('#login-submit').click();

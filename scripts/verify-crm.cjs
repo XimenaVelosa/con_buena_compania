@@ -91,7 +91,7 @@ const path = require('node:path');
         }).map((element) => `${element.tagName}.${element.className}`));
         assert.deepEqual(overflowing, [], `${width}px ${label}: horizontal overflow`);
       }
-      await page.goto('http://127.0.0.1:4173');
+      await page.goto('http://127.0.0.1:4173/crm');
       await page.locator('#login-error').waitFor({ state: 'attached' });
       await checkBounds('login');
       await page.locator('#login-user').fill('admin');

@@ -1,10 +1,10 @@
 # Frontend
 
-CRM de Con Buena Compañía con inicio de sesión administrativo, panel de resumen, clientes con búsqueda y ficha, y visitas a clientes con el formulario de ocho etapas. Diseño mobile-first con el PNG original de marca.
+Landing editorial de Con Buena Compañía en la página principal y acceso al CRM en `/crm`. La landing presenta las ocho actividades, sus detalles y exclusiones, el proceso de acompañamiento, las tarifas interactivas y el contacto por correo. El CRM conserva el inicio de sesión administrativo, el resumen, la consulta de clientes y el formulario de visitas de ocho etapas. Ambas páginas usan el PNG original de marca y diseño mobile-first.
 
 ## Probar localmente
 
-Inicia el backend en el puerto 3001 y ejecuta `npm run dev` en esta carpeta. Abre `http://127.0.0.1:4173` o `http://localhost:4173`; la API usará el mismo nombre de host para conservar la sesión. El usuario inicial se crea desde el backend con `npm run admin:create`.
+Ejecuta `npm run dev` en esta carpeta y abre `http://127.0.0.1:4173` o `http://localhost:4173` para la landing. El CRM se encuentra en `/crm`, con alias `/crm/` y `/crm.html`. Para el CRM, inicia el backend en el puerto 3001; la API usa el mismo nombre de host para conservar la sesión. El usuario inicial se crea desde el backend con `npm run admin:create`.
 
 El administrador debe cambiar su contraseña inicial antes de acceder a los registros. No hay registro público de usuarios. Las sesiones usan cookies HttpOnly; las contraseñas y los tokens no se guardan en localStorage. Los borradores de visitas se guardan en sessionStorage por administrador y se limpian al cerrar sesión.
 
@@ -14,9 +14,19 @@ El frontend usa `/api` en producción. `vercel.json` dirige esas rutas a `api/pr
 
 La aplicación no contiene credenciales de demostración ni listas de clientes ficticios. Si falta la conexión al backend se muestra un mensaje y no se simula un ingreso.
 
+`vercel.json` dirige `/crm` a `crm.html`; los estilos y scripts del CRM usan rutas absolutas. Los enlaces anteriores de la página principal con `#home`, `#clients`, `#visits` o `#new-visit` llevan a la vista correspondiente en `/crm`. La landing carga sus propios estilos y scripts; los datos del CRM se consultan al acceder a su página y con la sesión correspondiente.
+
+## Landing editorial
+
+Los textos, fotografías, contacto y tarifa base provienen del HTML editorial proporcionado. Se conservaron las ocho actividades actuales y sus límites: acompañamiento no médico, transporte de terceros, acompañantes que no conducen y exclusión de oficios domésticos. Cada actividad tiene detalles accesibles en un diálogo con sus exclusiones y condiciones.
+
+El simulador usa $25.000 COP por hora, IVA incluido, y duraciones de 2, 4 u 8 horas ($50.000, $100.000 y $200.000). Los botones de consulta preparan un correo para `gerencia@conbuenacompania.com` con la actividad o duración elegida. El envío se completa desde la aplicación de correo del visitante. La landing no crea visitas ni consulta datos de clientes.
+
+El logo original se reutiliza en cabecera y pie sin alterar el archivo. Las fotografías están en `images/`; la imagen principal se extrajo del HTML suministrado. La tipografía Nunito se sirve desde `fonts/` con su licencia OFL. El menú móvil, el carrusel y los diálogos admiten navegación por teclado y respetan la preferencia de movimiento reducido.
+
 ## Verificación
 
-`npm run check` revisa la sintaxis. `scripts/verify-crm.cjs` prueba el flujo visual con respuestas de API simuladas en 320, 375, 390, 768 y 1440 px; requiere instalar `playwright-core` en `.local/qa` y Chrome local. `scripts/verify-admin-login.cjs` comprueba el ingreso real contra un backend temporal en el puerto 3002 usando el archivo de acceso local del backend, sin cambiar la contraseña inicial ni imprimirla. Para comprobar producción, define `CRM_FRONTEND_URL=https://con-buena-compania.vercel.app`; se usará el proxy publicado sin sobrescribir la URL de la API.
+`npm run check` revisa la sintaxis. `scripts/verify-landing.cjs` verifica el logo, menú, detalles, carrusel, tarifas, enlaces de correo, acceso al CRM y enlaces antiguos en 320, 375, 390, 768, 1024 y 1440 px. `scripts/verify-crm.cjs` prueba el flujo completo del CRM en `/crm` con respuestas de API simuladas en 320, 375, 390, 768 y 1440 px. Las pruebas de navegador requieren instalar `playwright-core` en `.local/qa` y Chrome local. `scripts/verify-admin-login.cjs` comprueba el ingreso real contra un backend temporal en el puerto 3002 usando el archivo de acceso local del backend, sin cambiar la contraseña inicial ni imprimirla. Para comprobar producción, define `CRM_FRONTEND_URL=https://con-buena-compania.vercel.app`; se usará `/crm` y el proxy publicado.
 
 ## Contactos de emergencia
 
