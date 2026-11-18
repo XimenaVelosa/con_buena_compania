@@ -13,6 +13,7 @@
     <title>Con Buena Compañía | Acompañamiento que da independencia</title>
     <link rel="preload" href="/fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/landing.css" />
+    <script src="/landing-videos.js" defer></script>
     <script src="/landing.js" defer></script>
   </head>
   <body>
@@ -77,6 +78,29 @@
 
     <footer class="site-footer"><div class="container"><div class="footer-top"><a class="footer-brand" href="/#inicio" aria-label="Con Buena Compañía, volver al inicio"><img src="/brand-logo.png" alt="Con Buena Compañía" width="2428" height="752" loading="lazy" /></a><p>Compañía cercana y respetuosa<br />para las posibilidades de cada día.</p><a class="footer-crm" href="/crm" data-crm-link>Acceso al CRM <span aria-hidden="true">↗</span></a></div><div class="footer-bottom"><p>© <span id="copyright-year">2026</span> Con Buena Compañía</p><p>Bienestar · Acompañamiento · Independencia</p><span>Servicio de acompañamiento no médico · Manizales</span></div></div></footer>
 
-    <dialog id="service-dialog" class="service-dialog" aria-labelledby="service-dialog-title"><button id="service-dialog-close" class="dialog-close" type="button" aria-label="Cerrar detalles de la actividad" autofocus>×</button><div class="dialog-image-wrap"><img id="service-dialog-image" src="/images/companionship-hero.jpg" alt="" width="1300" height="867" /></div><div class="dialog-copy"><p id="service-dialog-number" class="eyebrow"></p><h2 id="service-dialog-title">Actividad de acompañamiento</h2><p id="service-dialog-description"></p><div class="dialog-exclusions"><h3>No incluye ni se permite</h3><ul id="service-dialog-exclusions"></ul></div><p id="service-dialog-conditions" class="dialog-conditions"></p><details class="service-considerations"><summary>Aspectos que conviene tener en cuenta</summary><p id="service-dialog-considerations"></p></details><div class="dialog-actions"><a id="service-email" class="button" href="mailto:gerencia@conbuenacompania.com">Consultar esta actividad <span aria-hidden="true">↗</span></a><button id="service-dialog-back" class="text-link" type="button">Seguir explorando</button></div></div></dialog>
+    <dialog id="service-dialog" class="service-dialog" aria-labelledby="service-dialog-title">
+      <button id="service-dialog-close" class="dialog-close" type="button" aria-label="Cerrar detalles de la actividad" autofocus>×</button>
+      <div class="dialog-image-wrap"><img id="service-dialog-image" src="/images/companionship-hero.jpg" alt="" width="1300" height="867" /></div>
+      <div class="dialog-copy">
+        <p id="service-dialog-number" class="eyebrow"></p><h2 id="service-dialog-title">Actividad de acompañamiento</h2><p id="service-dialog-description"></p>
+        <section class="service-experience" aria-labelledby="service-video-heading">
+          <h3 id="service-video-heading">Conoce la experiencia en video</h3>
+          <div class="service-video-frame">
+            <video id="service-video" controls playsinline preload="none" width="1280" height="720" aria-labelledby="service-video-heading service-dialog-title" hidden></video>
+            <div id="service-video-placeholder" class="service-video-placeholder" role="status">
+              <svg width="40" height="36" viewBox="0 0 40 36" fill="none" aria-hidden="true"><rect x="3" y="8" width="23" height="22" rx="5" stroke="currentColor" stroke-width="2"/><path d="m26 15 10-5v18l-10-5M10 8l3-5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <strong>Video de esta actividad</strong><span>Disponible próximamente</span>
+            </div>
+          </div>
+          <div id="service-video-error" class="service-video-error" role="alert" hidden><p>No fue posible cargar el video. Puedes volver a intentarlo o consultar esta actividad por correo.</p><button id="service-video-retry" class="text-link" type="button">Volver a intentar</button></div>
+        </section>
+        <details class="service-considerations">
+          <summary>Ver alcance y condiciones de esta actividad</summary>
+          <div class="dialog-exclusions"><h3>No incluye ni se permite</h3><ul id="service-dialog-exclusions"></ul></div>
+          <p id="service-dialog-conditions" class="dialog-conditions"></p><p id="service-dialog-considerations"></p>
+        </details>
+        <div class="dialog-actions"><a id="service-email" class="button" href="mailto:gerencia@conbuenacompania.com">Consultar esta actividad <span aria-hidden="true">↗</span></a><button id="service-dialog-back" class="text-link" type="button">Seguir explorando</button></div>
+      </div>
+    </dialog>
   </body>
 </html>

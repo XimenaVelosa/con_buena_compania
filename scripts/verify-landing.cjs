@@ -18,7 +18,7 @@ const path = require('node:path');
       const privateRequests = [];
       page.on('pageerror', (error) => errors.push(error.message));
       page.on('response', (response) => {
-        if (response.status() >= 400 && /\/(?:images\/|fonts\/|landing\.|brand-logo\.png)/.test(new URL(response.url()).pathname)) failedAssets.push(`${response.status()} ${new URL(response.url()).pathname}`);
+        if (response.status() >= 400 && /\/(?:images\/|fonts\/|landing[.-]|brand-logo\.png)/.test(new URL(response.url()).pathname)) failedAssets.push(`${response.status()} ${new URL(response.url()).pathname}`);
       });
       page.on('request', (request) => { if (/\/api\/|:3001\//.test(request.url())) privateRequests.push(request.url()); });
       await page.route('http://127.0.0.1:3001/**', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"Ingresa para continuar."}', headers: { 'Access-Control-Allow-Origin': new URL(base).origin, 'Access-Control-Allow-Credentials': 'true' } }));
@@ -79,6 +79,17 @@ const path = require('node:path');
         assert.ok((await page.locator('#service-dialog-exclusions').textContent()).includes('oficios domésticos'));
         const contact = new URL(await page.locator('#service-email').getAttribute('href'));
         assert.ok(contact.searchParams.get('subject').includes(title));
+        assert.equal(await page.locator('#service-video-placeholder').isVisible(), true, 'Missing video shows an honest placeholder');
+        assert.equal(await page.locator('#service-video').isVisible(), false);
+        assert.equal(await page.locator('#service-video').getAttribute('src'), null);
+        assert.equal(await page.locator('#service-video-error').isVisible(), false);
+        assert.equal(await page.locator('.service-considerations').evaluate((element) => element.open), false, 'Scope starts collapsed below video');
+        const frame = await page.locator('.service-video-frame').boundingBox();
+        assert.ok(Math.abs(frame.width / frame.height - 16 / 9) < .02, 'Video stays 16:9 at every viewport');
+        if (index === 0 && [390, 1440].includes(width)) {
+          await page.locator('.service-experience').scrollIntoViewIfNeeded();
+          await page.locator('#service-dialog').screenshot({ path: path.join(artifacts, `landing-video-${width}.png`) });
+        }
         await page.locator('.service-considerations summary').click();
         assert.equal(await page.locator('#service-dialog-considerations').isVisible(), true);
         await page.locator('#service-dialog').evaluate((element) => { element.scrollTop = element.scrollHeight; });
@@ -114,6 +125,74 @@ const path = require('node:path');
       assert.deepEqual(errors, [], 'No JavaScript errors in landing or CRM entry');
       console.log(`OK ${width}px: original logo, mobile menu, eight service details, calculator, email links, carousel, CRM access and legacy links; no overflow.`);
       await context.close();
+    }
+
+    // A short in-memory clip exercises the real native player without publishing sample media.
+    const fixturePage = await browser.newPage();
+    const clip = Buffer.from(await fixturePage.evaluate(async () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 160; canvas.height = 90;
+      const context = canvas.getContext('2d');
+      const stream = canvas.captureStream(12);
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      const chunks = [];
+      const recorded = new Promise((resolve) => {
+        recorder.ondataavailable = (event) => chunks.push(event.data);
+        recorder.onstop = () => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(new Blob(chunks, { type: 'video/webm' }));
+        };
+      });
+      recorder.start();
+      let frame = 0;
+      const timer = setInterval(() => { context.fillStyle = frame++ % 2 ? '#13294b' : '#00aba6'; context.fillRect(0, 0, 160, 90); }, 80);
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      clearInterval(timer); recorder.stop();
+      const result = await recorded;
+      stream.getTracks().forEach((track) => track.stop());
+      return result;
+    }), 'base64');
+    await fixturePage.close();
+    assert.ok(clip.length > 100, 'Playable test clip was recorded');
+    for (const width of [390, 1440]) {
+      const page = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
+      let videoRequests = 0;
+      await page.route('**/videos/qa-player.webm', (route) => { videoRequests++; return route.fulfill({ contentType: 'video/webm', body: clip }); });
+      await page.addInitScript(() => { window.CBC_ACTIVITY_VIDEOS = { 'medical-appointments': { src: '/videos/qa-player.webm' } }; });
+      await page.goto(base, { waitUntil: 'networkidle' });
+      assert.equal(videoRequests, 0, 'No video download on landing load');
+      const first = page.locator('[data-service="medical-appointments"]');
+      await first.click();
+      const video = page.locator('#service-video');
+      assert.equal(await video.isVisible(), true);
+      assert.equal(await page.locator('#service-video-placeholder').isVisible(), false);
+      assert.deepEqual(await video.evaluate((element) => ({ controls: element.controls, inline: element.playsInline, autoplay: element.autoplay, paused: element.paused, preload: element.preload })), { controls: true, inline: true, autoplay: false, paused: true, preload: 'none' });
+      await video.scrollIntoViewIfNeeded();
+      await video.evaluate(async (element) => { element.muted = true; await element.play(); });
+      await page.waitForFunction(() => document.querySelector('#service-video').currentTime > .05);
+      assert.ok(videoRequests > 0, 'Native player loads and plays configured media');
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => { const video = document.querySelector('#service-video'); return video.paused && !video.hasAttribute('src'); });
+      await page.locator('[data-service="wellbeing-company"]').click();
+      assert.equal(await video.getAttribute('src'), null, 'An activity without media does not inherit another video');
+      assert.equal(await page.locator('#service-video-placeholder').isVisible(), true);
+      await page.keyboard.press('Escape');
+      await page.evaluate(() => { window.CBC_ACTIVITY_VIDEOS['medical-appointments'] = { src: '/videos/missing-qa.webm' }; });
+      await first.click();
+      await video.scrollIntoViewIfNeeded();
+      await video.evaluate((element) => { element.load(); });
+      await page.locator('#service-video-error').waitFor({ state: 'visible' });
+      await page.evaluate(() => { window.CBC_ACTIVITY_VIDEOS['medical-appointments'] = { src: '/videos/qa-player.webm' }; });
+      await page.locator('#service-video-retry').click();
+      assert.equal(await video.isVisible(), true);
+      assert.equal(await page.locator('#service-video-error').isVisible(), false);
+      await video.evaluate(async (element) => { await element.play(); });
+      await page.waitForFunction(() => document.querySelector('#service-video').currentTime > .05);
+      await page.locator('#service-dialog-close').click();
+      await page.waitForFunction(() => !document.querySelector('#service-video').hasAttribute('src'));
+      console.log(`OK ${width}px: native video playback, no autoplay, activity isolation, stop on close, load failure and retry.`);
+      await page.close();
     }
   } finally { await browser.close(); }
 })().catch((error) => { console.error(error); process.exitCode = 1; });

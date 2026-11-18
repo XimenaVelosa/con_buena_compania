@@ -145,6 +145,17 @@ h2{margin:0 0 18px;font-size:clamp(32px,7.8vw,47px);line-height:1.14;letter-spac
 .dialog-copy>.eyebrow{margin-bottom:13px}
 .dialog-copy h2{font-size:29px;letter-spacing:-.7px;line-height:1.2}
 .dialog-copy>p:not(.eyebrow){font-size:15px;line-height:1.8;color:var(--muted)}
+.service-experience{margin:24px 0}
+.service-experience h3{margin:0 0 12px;font-size:18px;line-height:1.4}
+.service-video-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:14px;background:linear-gradient(135deg,#13294b,#28485e)}
+.service-video-frame video{display:block;width:100%;height:100%;object-fit:contain;background:#101e33}
+.service-video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px;color:#f1f5fa;text-align:center}
+.service-video-placeholder svg{flex:none;color:#8bdad4}
+.service-video-placeholder strong{font-size:15px;line-height:1.4}
+.service-video-placeholder span{font-size:12px;color:#c3d4df}
+.service-video-error{margin-top:12px;color:#7d4453;font-size:13px}
+.service-video-error p{margin:0}
+.service-video-error button{font-size:13px}
 .dialog-exclusions{padding:18px;background:#faf4fc;border-radius:12px}
 .dialog-exclusions h3{margin:0 0 10px;color:var(--purple);font-size:15px}
 .dialog-exclusions ul{margin:0;padding-left:19px;font-size:14px;line-height:1.7;color:#655371}
@@ -152,6 +163,7 @@ h2{margin:0 0 18px;font-size:clamp(32px,7.8vw,47px);line-height:1.14;letter-spac
 .dialog-conditions{margin:18px 0}
 .service-considerations{padding:15px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-size:14px;line-height:1.7}
 .service-considerations summary{cursor:pointer;font-weight:800}
+.service-considerations>.dialog-exclusions{margin-top:16px}
 .service-considerations p{margin:12px 0 0;color:var(--muted);font-size:13px}
 .dialog-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px;margin-top:24px}
 @media(min-width:600px){.container{width:min(calc(100% - 56px),1200px)}.brand{width:208px}.header-inner{min-height:86px}.crm-access{padding-inline:15px;font-size:13px}.crm-access-prefix{display:inline}.hero{padding-top:48px}.hero-grid{gap:42px}.hero-copy{max-width:620px}.hero-visual{max-width:650px;width:100%;justify-self:center}.hero-photo{height:500px}.photo-note{left:22px;bottom:55px;padding:19px 22px}.photo-note strong{font-size:16px}.hero-caption{font-size:10px;letter-spacing:1.5px}.eyebrow{font-size:11px}.section{padding:80px 0}.section-heading{gap:30px}.service-card{flex-basis:326px}.service-card>img{height:220px}.service-body{padding:24px}.pricing-visual img{height:400px}.duration-options button strong{font-size:16px}.duration-options button span{font-size:12px}.estimate output{font-size:40px}.contact-section{padding:80px 0}.footer-top{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px}.footer-bottom{flex-flow:row wrap;justify-content:space-between;gap:12px 25px}.service-dialog{width:calc(100% - 48px);border-radius:22px}.dialog-image-wrap img{height:270px}.dialog-copy{padding:32px}.dialog-copy h2{font-size:35px}}

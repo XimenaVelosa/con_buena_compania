@@ -121,7 +121,48 @@
   };
 
   const dialog = document.querySelector('#service-dialog');
+  const activityVideo = document.querySelector('#service-video');
+  const videoPlaceholder = document.querySelector('#service-video-placeholder');
+  const videoError = document.querySelector('#service-video-error');
+  let videoActivity = null;
   let opener = null;
+  function videoUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return '';
+    try {
+      const url = new URL(value, location.href);
+      if (url.username || url.password || !['http:', 'https:'].includes(url.protocol)) return '';
+      if (url.protocol === 'http:' && url.origin !== location.origin) return '';
+      return url.href;
+    } catch { return ''; }
+  }
+  function stopVideo() {
+    activityVideo.pause();
+    activityVideo.removeAttribute('src');
+    activityVideo.removeAttribute('poster');
+    activityVideo.load();
+    activityVideo.hidden = true;
+    videoPlaceholder.hidden = false;
+    videoError.hidden = true;
+  }
+  function prepareVideo(id) {
+    stopVideo();
+    videoActivity = id;
+    const config = window.CBC_ACTIVITY_VIDEOS?.[id];
+    const src = videoUrl(typeof config === 'string' ? config : config?.src);
+    if (!src) { videoError.hidden = !config; return; }
+    const poster = videoUrl(config?.poster);
+    if (poster) activityVideo.poster = poster;
+    activityVideo.src = src;
+    activityVideo.hidden = false;
+    videoPlaceholder.hidden = true;
+  }
+  activityVideo.addEventListener('error', () => {
+    if (!activityVideo.getAttribute('src')) return;
+    activityVideo.hidden = true;
+    videoPlaceholder.hidden = false;
+    videoError.hidden = false;
+  });
+  document.querySelector('#service-video-retry').addEventListener('click', () => { if (videoActivity) prepareVideo(videoActivity); });
   function openService(link) {
     const service = services[link.dataset.service];
     if (!service) return;
@@ -138,6 +179,7 @@
     document.querySelector('#service-dialog-conditions').textContent = service.conditions;
     document.querySelector('#service-dialog-considerations').textContent = service.considerations;
     document.querySelector('.service-considerations').open = false;
+    prepareVideo(link.dataset.service);
     const exclusions = document.querySelector('#service-dialog-exclusions');
     exclusions.replaceChildren(...[...service.exclusions, commonExclusion].map((text) => { const item = document.createElement('li'); item.textContent = text; return item; }));
     document.querySelector('#service-email').href = mailLink(`Consulta: ${title}`, `Hola, quisiera conocer la disponibilidad y las condiciones para la actividad: ${title}.`);
@@ -152,7 +194,7 @@
     const bounds = dialog.getBoundingClientRect();
     if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
   });
-  dialog.addEventListener('close', () => { document.body.classList.remove('dialog-open'); if (opener?.isConnected) opener.focus(); });
+  dialog.addEventListener('close', () => { stopVideo(); videoActivity = null; document.body.classList.remove('dialog-open'); if (opener?.isConnected) opener.focus(); });
 
   const durationButtons = [...document.querySelectorAll('[data-hours]')];
   function selectHours(hours) {
