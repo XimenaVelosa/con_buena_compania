@@ -22,7 +22,7 @@ const path = require('node:path');
       const errors = [];
       page.on('pageerror', (error) => errors.push(error.message));
       let authenticated = false;
-      let changed = false;
+      let pendingPassword = false;
       let posts = 0;
       let activityCatalogOffline = false;
       const privacy = { configured: width === 1440, version: 'QA-v1', hash: 'a'.repeat(64), paragraphs: [
@@ -32,18 +32,17 @@ const path = require('node:path');
         { title: 'Declaración de veracidad y colaboración', text: 'La persona declara de buena fe información veraz y actualizada, sin ocultar deliberadamente circunstancias conocidas relevantes para la seguridad.' },
         { title: 'Quién puede autorizar', text: 'El titular o su representante legitimado debe manifestar la autorización.' },
       ] };
-      const user = { id: 'qa-user', username: 'admin', displayName: 'Administración', role: 'admin', mustChangePassword: true };
+      const user = { id: 'qa-user', username: 'admin', displayName: 'Administración', role: 'admin', mustChangePassword: false };
       const record = { id: '11111111-1111-4111-8111-111111111111', fullName: 'Cliente de prueba', phone: '3001234567', address: 'Calle 10 #20-30, Bogotá', visitDate: '2026-11-16', visitTime: '08:55', visitLocation: 'Calle 10 #20-30, Bogotá', visitAgentName: 'Responsable de visita', createdAt: '2026-11-16T10:00:00Z', independentActivities: '["Lectura"]' };
       record.emergencyContacts = JSON.stringify([{ type: 'guardian', fullName: 'Acudiente QA', idNumber: '001234567', address: 'Calle del acudiente 20', phone: '+57 300 123 4567' }, { type: 'additional', fullName: 'Contacto QA', idNumber: '00098765', address: 'Carrera de emergencia 30', phone: '+57 311 222 3344' }]);
       await page.route('http://127.0.0.1:3001/**', async (route) => {
         const url = new URL(route.request().url());
         let status = 200;
         let data;
-        if (url.pathname === '/auth/login') { authenticated = true; data = { user: { ...user, mustChangePassword: !changed } }; }
+        if (url.pathname === '/auth/login') { authenticated = true; data = { user: { ...user, mustChangePassword: pendingPassword } }; }
         else if (!authenticated) { status = 401; data = { message: 'Ingresa para continuar.' }; }
-        else if (url.pathname === '/auth/change-password') { changed = true; data = { user: { ...user, mustChangePassword: false } }; }
         else if (url.pathname === '/auth/logout') { authenticated = false; data = { ok: true }; }
-        else if (url.pathname === '/auth/session') data = { user: { ...user, mustChangePassword: !changed } };
+        else if (url.pathname === '/auth/session') data = { user };
         else if (url.pathname === '/clients/privacy-notice') data = privacy;
         else if (url.pathname === '/clients/activity-options') {
           if (activityCatalogOffline) { status = 503; data = { message: 'Catálogo temporalmente no disponible.' }; }
@@ -94,16 +93,22 @@ const path = require('node:path');
       await page.goto('http://127.0.0.1:4173/crm');
       await page.locator('#login-error').waitFor({ state: 'attached' });
       await checkBounds('login');
+      if (width === 320) {
+        pendingPassword = true;
+        await page.locator('#login-user').fill('admin');
+        await page.locator('#login-password').fill('legacy-pending-password');
+        await page.locator('#login-submit').click();
+        await page.waitForFunction(() => document.querySelector('#login-error').textContent.includes('administrador debe actualizar'));
+        assert.equal(await page.locator('#crm-app').isVisible(), false, 'Legacy pending accounts require backend administration');
+        assert.equal(await page.locator('#password-form').count(), 0);
+        pendingPassword = false;
+        authenticated = false;
+      }
       await page.locator('#login-user').fill('admin');
-      await page.locator('#login-password').fill('initial-password');
+      await page.locator('#login-password').fill('admin-managed-password');
       await page.locator('#login-submit').click();
-      await page.locator('#password-screen').waitFor({ state: 'visible' });
-      await checkBounds('password');
-      await page.locator('#current-password').fill('initial-password');
-      await page.locator('#new-password').fill('a-personal-password');
-      await page.locator('#confirm-password').fill('a-personal-password');
-      await page.locator('#password-form button[type=submit]').click();
       await page.locator('#recent-records [data-detail]').waitFor();
+      assert.equal(await page.locator('#account-button, #password-screen, #password-form').count(), 0, 'Password administration is unavailable in the browser');
       await checkBounds('dashboard');
       if ([390, 1440].includes(width)) await page.screenshot({ path: path.join(artifacts, `crm-${width}.png`), fullPage: true });
       await page.locator('[data-route=clients]').click();

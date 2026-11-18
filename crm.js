@@ -37,7 +37,6 @@
     revision++;
     dialog.close();
     $('#crm-app').hidden = true;
-    $('#password-screen').hidden = true;
     $('#login-screen').hidden = false;
     $('#login-error').textContent = message;
     $('#client-search').value = '';
@@ -46,21 +45,14 @@
     document.dispatchEvent(new CustomEvent('cbc:logout', { detail: oldUser }));
   }
 
-  function showPassword() {
-    $('#login-screen').hidden = true;
-    $('#crm-app').hidden = true;
-    $('#password-screen').hidden = false;
-    $('#password-error').textContent = '';
-    $('#password-form').reset();
-    $('#current-password').focus();
-  }
-
   async function enter(account) {
+    if (account.mustChangePassword) {
+      lock('El administrador debe actualizar la contraseña de esta cuenta para habilitar el acceso.');
+      return;
+    }
     user = account;
     $('#login-form').reset();
-    if (user.mustChangePassword) { showPassword(); return; }
     $('#login-screen').hidden = true;
-    $('#password-screen').hidden = true;
     $('#crm-app').hidden = false;
     $('#admin-name').textContent = user.displayName;
     $('.admin-avatar').textContent = user.displayName.charAt(0).toUpperCase();
@@ -103,7 +95,7 @@
   }
 
   async function refresh() {
-    if (!user || user.mustChangePassword) return;
+    if (!user) return;
     const currentRevision = ++revision;
     document.querySelectorAll('[data-refresh]').forEach((button) => { button.disabled = true; });
     if (!records.length) for (const selector of ['#recent-records', '#client-records', '#visit-records']) $(selector).innerHTML = '<p class="empty-state" role="status">Cargando registros…</p>';
@@ -125,7 +117,7 @@
   }
 
   function route() {
-    if (!user || user.mustChangePassword || !$('#password-screen').hidden) return;
+    if (!user) return;
     const requested = location.hash.slice(1) || 'home';
     const selected = knownRoutes.includes(requested) ? requested : 'home';
     document.querySelectorAll('[data-view]').forEach((view) => { view.hidden = view.dataset.view !== selected; });
@@ -231,27 +223,11 @@
     $('#toggle-password').setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
   });
 
-  $('#password-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    $('#password-error').textContent = '';
-    if ($('#new-password').value !== $('#confirm-password').value) { $('#password-error').textContent = 'Las nuevas contraseñas no coinciden.'; return; }
-    const submit = event.currentTarget.querySelector('button[type=submit]');
-    submit.disabled = true;
-    try {
-      const result = await api('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: $('#current-password').value, newPassword: $('#new-password').value }) });
-      $('#password-form').reset();
-      await enter(result.user);
-    } catch (error) { $('#password-error').textContent = error.message; }
-    finally { submit.disabled = false; }
-  });
-
   async function logout() {
     try { await api('/auth/logout', { method: 'POST', body: '{}' }); lock(); }
-    catch (error) { if ($('#crm-app').hidden) $('#password-error').textContent = error.message; else notice(error.message); }
+    catch (error) { notice(error.message); }
   }
   $('#logout-button').addEventListener('click', logout);
-  $('#password-cancel').addEventListener('click', logout);
-  $('#account-button').addEventListener('click', showPassword);
   $('#close-detail').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => { detailId = null; $('#detail-content').replaceChildren(); });
   document.addEventListener('click', (event) => { const button = event.target.closest('[data-detail]'); if (button) openDetail(button.dataset.detail); });

@@ -25,6 +25,11 @@ test('CRM proxy validates routes, requires explicit writes and forwards private 
     res = response();
     await handler({ method: 'POST', url: '/api/auth/login', headers: {} }, res);
     assert.equal(res.code, 403);
+    for (const url of ['/api/auth/change-password', '/api/proxy?route=auth%2Fchange-password']) {
+      res = response();
+      await handler({ method: 'POST', url, headers: { 'x-crm-request': '1', cookie: 'cbc_admin_session=opaque' }, body: { currentPassword: 'old', newPassword: 'replacement-password' } }, res);
+      assert.equal(res.code, 404, 'Password changes are never forwarded to the backend');
+    }
     global.fetch = async (url, options) => {
       assert.equal(String(url), 'https://api.example.com/auth/session');
       assert.equal(options.headers.Cookie, 'cbc_admin_session=opaque');
