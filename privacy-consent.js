@@ -27,12 +27,12 @@
     personal.disabled = truth.disabled = sensitive.disabled = !notice;
     signer.disabled = role.disabled = basis.disabled = !notice;
     const basic = allowed();
-    for (const element of form.querySelectorAll('input, textarea, select, .location-button')) {
+    for (const element of form.querySelectorAll('input, textarea, select, .location-button, [data-activity-action]')) {
       if (panel.contains(element)) continue;
       if (['visitDate', 'visitTime', 'visitAgentName'].includes(element.name)) continue;
       // The emergency component also controls whether its optional fields are enabled.
       const otherContactInactive = element.matches('[data-emergency-field]') && !document.querySelector('#emergency-add-other').checked;
-      element.disabled = !basic || (!sensitive.checked && sensitiveFields.includes(element.name)) || otherContactInactive;
+      element.disabled = !basic || (!sensitive.checked && sensitiveFields.includes(element.name)) || otherContactInactive || Boolean(window.CBC_ACTIVITIES?.isUnavailable(element));
     }
     form.querySelectorAll('[data-sensitive-help]').forEach((item) => { item.hidden = sensitive.checked && basic; });
     document.querySelector('#visit-privacy-help').hidden = basic;

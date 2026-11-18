@@ -30,6 +30,16 @@ Ninguna casilla viene aceptada. Se identifica al titular o a quien esté legitim
 
 El aviso está publicado a nombre de Con Buena Compañía y se puede aceptar sin que exista una política enlazada. Explica expresamente que la política aún no está publicada y permite contactar al equipo por el canal usado para solicitar el servicio o durante la visita. No incluye correos, teléfonos ni enlaces inventados. El nombre o razón social del responsable, correo y teléfono reales se pueden completar mediante `CRM_PRIVACY_CONTROLLER`, `CRM_PRIVACY_EMAIL` y `CRM_PRIVACY_PHONE`; `CRM_PRIVACY_POLICY_URL` añadirá el enlace cuando se publique la política. Esa información pendiente no bloquea el formulario. El backend conserva si los datos de contacto estaban completos al registrar cada declaración. La ficha muestra la autorización de cada informe; los informes anteriores no se consideran autorizados por defecto. El aviso no reemplaza la política completa ni acredita por sí solo la identidad o representación del declarante.
 
+## Actividades de interés y taxis
+
+El paso 06 se llama «Actividades que le interesaría contratar». Carga las ocho opciones desde `GET /clients/activity-options`, con una descripción, exclusiones específicas y la prohibición común de conducir vehículos y realizar oficios domésticos. Las exclusiones permanecen visibles en cada tarjeta. La aplicación registra interés; la operación del servicio y la coordinación con el transportador se realizan por el equipo.
+
+Cuando se selecciona alguna actividad, se indica cómo se resolverán los traslados: uno o varios taxis de confianza de la persona, autorización para buscar y coordinar un taxi prestado por un tercero, o actividad en casa / traslado ya resuelto por la persona. Se admiten hasta cinco contactos con nombre y teléfono, más empresa y placa opcionales. La segunda opción exige el nombre de quien autoriza y una casilla desmarcada inicialmente al final de la sección. El nombre se sugiere a partir de quien autorizó los datos personales y se puede editar.
+
+`activities.js` envía `activitySelection`; el backend valida el catálogo y guarda su texto, actividades seleccionadas, exclusiones, contactos y autorización en `activityPreferences`. Los contactos de opciones inactivas permanecen en el borrador de sesión y no se envían a la API. Si cambia el catálogo, se solicita revisar de nuevo la selección y la autorización. Si falla una actualización, se conservan los datos del borrador. Una nueva visita y el cierre de sesión limpian estas decisiones. Las fichas antiguas conservan sus datos y se identifican como actividades del formulario anterior.
+
+La prueba visual admite `CRM_ACTIVITY_FIXTURE` con una exportación JSON del catálogo real y `CRM_QA_WIDTHS` con anchos separados por comas. Cubre contactos múltiples, autorización, cambios de opción, restauración del borrador, fallas de conexión y actualización de condiciones.
+
 ## Ubicación actual
 
 La ubicación actual conserva `visitLatitude` y `visitLongitude` como campos separados y completa `visitLocation` con una dirección aproximada editable. Se consulta Photon únicamente al pulsar el botón; si falla, las coordenadas se conservan y la dirección puede ingresarse manualmente.

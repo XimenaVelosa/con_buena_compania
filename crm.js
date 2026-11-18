@@ -143,7 +143,7 @@
     ['03 · Información de la persona', [['fullName', 'Nombre completo'], ['approximateAge', 'Edad'], ['phone', 'Teléfono'], ['address', 'Dirección de residencia']]],
     ['04 · Solicitud y acudiente', [['requesterName', 'Persona que solicita'], ['requesterRelationship', 'Parentesco'], ['payerName', 'Nombre completo del acudiente'], ['guardianIdNumber', 'Cédula del acudiente'], ['guardianAddress', 'Dirección del acudiente'], ['guardianPhone', 'Celular del acudiente'], ['knowsVisit', 'Conoce y acepta la visita']]],
     ['05 · Movilidad', [['mobilityNeeds', 'Movilidad y apoyos'], ['mobilityNotes', 'Observaciones']]],
-    ['06 · Autonomía y actividades', [['independentActivities', 'Actividades solicitadas'], ['independenceNotes', 'Observaciones y otras actividades solicitadas']]],
+    ['06 · Actividades que le interesaría contratar', [['independentActivities', 'Actividades de interés'], ['independenceNotes', 'Observaciones sobre las actividades'], ['activityPreferences', 'Alcance, exclusiones y coordinación de taxi']]],
     ['07 · Entorno y seguridad', [['homeAccessConditions', 'Condiciones del entorno'], ['medicationSupport', 'Medicamentos y procedimientos'], ['personalCareSupport', 'Cuidado personal'], ['homeSafetyNotes', 'Seguridad'], ['homeSafetyConditions', 'Condiciones especiales']]],
     ['08 · Cierre', [['outingConditions', 'Condiciones para salidas'], ['transportPlan', 'Transporte'], ['emergencyContacts', 'Contactos de emergencia'], ['preferences', 'Preferencias'], ['visitConclusion', 'Conclusión'], ['recommendedServices', 'Servicios recomendados'], ['nextContact', 'Próximo contacto'], ['finalNotes', 'Observaciones finales']]],
   ];
@@ -178,6 +178,24 @@
     return String(value);
   }
 
+  function activityPreferencesText(value) {
+    if (!value) return 'Sin información adicional registrada.';
+    let data;
+    try { data = JSON.parse(value); } catch { return fieldText(value); }
+    if (!data || !Array.isArray(data.selectedActivities)) return fieldText(value);
+    const lines = [`Versión de las actividades: ${data.catalogVersion || 'Sin registrar'}`];
+    for (const activity of data.selectedActivities) {
+      lines.push('', activity.title || '', activity.description || '', 'No incluye ni se permite:', ...(Array.isArray(activity.exclusions) ? activity.exclusions.map((item) => `• ${item}`) : []));
+    }
+    if (data.scopeNotice) lines.push('', 'Condiciones de todas las actividades:', data.scopeNotice);
+    const modes = { 'trusted-taxi': 'Cuenta con taxi de confianza', 'authorize-taxi': 'Autoriza buscar y coordinar un taxi de un tercero', 'not-needed': 'Actividad en casa o traslado resuelto por la persona', pending: 'Por definir' };
+    lines.push('', `Traslados: ${modes[data.transportMode] || 'Sin registrar'}`);
+    if (Array.isArray(data.taxiContacts)) data.taxiContacts.forEach((contact, index) => lines.push(`Contacto de taxi ${index + 1}: ${contact.name || 'Sin nombre'}`, `Teléfono: ${contact.phone || 'Sin registrar'}`, ...(contact.company ? [`Empresa / central: ${contact.company}`] : []), ...(contact.plate ? [`Placa: ${contact.plate}`] : [])));
+    if (data.taxiAuthorization?.accepted === true) lines.push('', 'Coordinación de taxi autorizada expresamente', `Autoriza: ${data.taxiAuthorization.authorizedBy || 'Sin registrar'}`, `Fecha de registro: ${data.taxiAuthorization.recordedAt || 'Sin registrar'}`, data.taxiAuthorization.text || '');
+    else lines.push('', 'No hay autorización registrada para que Con Buena Compañía busque un taxi.');
+    return lines.join('\n');
+  }
+
   async function openDetail(id) {
     detailId = id;
     $('#detail-title').textContent = 'Cargando ficha…';
@@ -187,7 +205,8 @@
       const record = await api(`/clients/${encodeURIComponent(id)}`);
       if (detailId !== id || !dialog.open || !user) return;
       $('#detail-title').textContent = record.fullName;
-      $('#detail-content').innerHTML = sections.map(([title, fields]) => `<section class="detail-section"><h3>${escape(title)}</h3><dl>${fields.map(([key, label]) => `<div><dt>${escape(label)}</dt><dd>${escape(key === 'visitDate' ? date(record[key]) : key === 'dataAuthorization' ? authorizationText(record[key]) : key === 'emergencyContacts' ? emergencyContactsText(record[key]) : fieldText(record[key]))}</dd></div>`).join('')}</dl></section>`).join('');
+      const recordSections = sections.map(([title, fields]) => title.startsWith('06 ·') && !record.activityPreferences ? ['06 · Actividades del formulario anterior', fields.filter(([key]) => key !== 'activityPreferences').map(([key, label]) => [key, key === 'independentActivities' ? 'Actividades registradas anteriormente' : label])] : [title, fields]);
+      $('#detail-content').innerHTML = recordSections.map(([title, fields]) => `<section class="detail-section"><h3>${escape(title)}</h3><dl>${fields.map(([key, label]) => `<div><dt>${escape(label)}</dt><dd>${escape(key === 'visitDate' ? date(record[key]) : key === 'dataAuthorization' ? authorizationText(record[key]) : key === 'emergencyContacts' ? emergencyContactsText(record[key]) : key === 'activityPreferences' ? activityPreferencesText(record[key]) : fieldText(record[key]))}</dd></div>`).join('')}</dl></section>`).join('');
     } catch (error) {
       if (dialog.open && detailId === id) { $('#detail-title').textContent = 'No se pudo abrir la ficha'; $('#detail-content').textContent = error.message; }
     }

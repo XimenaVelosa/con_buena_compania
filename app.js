@@ -135,7 +135,7 @@ function prefillResidenceAddress() {
 function collectFormData() {
   const data = {};
   for (const field of form.elements) {
-    if (!field.name || field.disabled) continue;
+    if (!field.name || field.disabled || field.name.startsWith('_')) continue;
     if (field.type === 'checkbox') {
       if (field.name === 'knowsVisit') data.knowsVisit = field.checked;
       else if (field.checked) { data[field.name] ??= []; data[field.name].push(field.value); }
@@ -143,6 +143,7 @@ function collectFormData() {
   }
   for (const field of multiSelectFields) data[field] = JSON.stringify(data[field] || []);
   data.emergencyContacts = window.CBC_EMERGENCY.serialize();
+  data.activitySelection = window.CBC_ACTIVITIES.serialize();
   data.authorization = window.CBC_PRIVACY.serialize();
   if (!data.authorization.sensitiveData) for (const name of window.CBC_PRIVACY.sensitiveFields) delete data[name];
   if (data.approximateAge) data.approximateAge = Number(data.approximateAge);
@@ -154,6 +155,7 @@ function collectFormData() {
 function setStep(step) {
   if (step > 1 && !window.CBC_PRIVACY.allowed()) step = 1;
   if (step === 2) prefillResidenceAddress();
+  if (step === 5) window.CBC_ACTIVITIES.sync();
   if (step === 7) window.CBC_EMERGENCY.sync();
   window.CBC_PRIVACY.sync();
   currentStep = step;
@@ -170,7 +172,7 @@ function saveDraft() {
     try { sessionStorage.removeItem(draftKey()); } catch { /* Storage may be disabled. */ }
     return;
   }
-  try { sessionStorage.setItem(draftKey(), JSON.stringify({ ...collectFormData(), _emergencyDraft: window.CBC_EMERGENCY.draft() })); } catch { /* The form stays usable when browser storage is unavailable. */ }
+  try { sessionStorage.setItem(draftKey(), JSON.stringify({ ...collectFormData(), _emergencyDraft: window.CBC_EMERGENCY.draft(), _activityDraft: window.CBC_ACTIVITIES.draft() })); } catch { /* The form stays usable when browser storage is unavailable. */ }
 }
 function restoreDraft() {
   let data;
@@ -186,10 +188,12 @@ function restoreDraft() {
     else fields[0].value = value;
   });
   window.CBC_EMERGENCY.restore(data.emergencyContacts, data._emergencyDraft);
+  window.CBC_ACTIVITIES.restore(data.activitySelection, data._activityDraft, data.independentActivities);
   window.CBC_PRIVACY.restore(data.authorization);
 }
 function validateCurrentStep() {
   if (currentStep === 1) return window.CBC_PRIVACY.validate();
+  if (currentStep === 5) return window.CBC_ACTIVITIES.validate();
   if (currentStep === 7) return window.CBC_EMERGENCY.validate();
   if (currentStep !== 2) return true;
   const fullName = form.elements.fullName.value.trim();
@@ -204,6 +208,7 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault(); if (!validateCurrentStep()) return;
   if (!window.CBC_PRIVACY.allowed()) { setStep(1); window.CBC_PRIVACY.validate(); return; }
   if (!form.elements.fullName.value.trim()) { setStep(2); form.elements.fullName.focus(); return; }
+  if (!window.CBC_ACTIVITIES.validate()) { setStep(5); window.CBC_ACTIVITIES.validate(); return; }
   saveButton.disabled = true; saveButton.textContent = 'Guardando…';
   try {
     await window.CBC_CRM.api('/clients', { method: 'POST', body: JSON.stringify(collectFormData()) });
@@ -217,6 +222,7 @@ form.addEventListener('submit', async (event) => {
 function resetVisit() {
   form.reset();
   window.CBC_EMERGENCY.reset();
+  window.CBC_ACTIVITIES.reset();
   window.CBC_PRIVACY.reset();
   form.hidden = false;
   document.querySelector('.progress').hidden = false;

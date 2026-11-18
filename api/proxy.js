@@ -6,7 +6,7 @@ module.exports = async function handler(request, response) {
   const requestUrl = new URL(request.url, 'https://crm.local');
   const route = requestUrl.searchParams.get('route') || (typeof request.query?.route === 'string' ? request.query.route : '');
   const path = route ? `/${route}` : requestUrl.pathname.replace(/^\/api/, '');
-  if (!/^\/(?:auth\/(?:login|logout|session|change-password)|clients(?:\/(?:privacy-notice|[a-f0-9-]{36}))?)$/.test(path) || !['GET', 'POST'].includes(request.method)) {
+  if (!/^\/(?:auth\/(?:login|logout|session|change-password)|clients(?:\/(?:privacy-notice|activity-options|[a-f0-9-]{36}))?)$/.test(path) || !['GET', 'POST'].includes(request.method)) {
     response.status(404).json({ message: 'Ruta no disponible.' }); return;
   }
   if (request.method === 'POST' && request.headers['x-crm-request'] !== '1') {

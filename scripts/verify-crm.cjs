@@ -1,7 +1,7 @@
 // Optional browser QA: npm install --prefix .local/qa --no-save --package-lock=false playwright-core
 const { chromium } = require('../.local/qa/node_modules/playwright-core');
 const assert = require('node:assert/strict');
-const { mkdir } = require('node:fs/promises');
+const { mkdir, readFile } = require('node:fs/promises');
 const path = require('node:path');
 
 (async () => {
@@ -9,8 +9,14 @@ const path = require('node:path');
   const browser = await chromium.launch({ executablePath, headless: true });
   const artifacts = path.resolve(__dirname, '../.local/qa-artifacts');
   await mkdir(artifacts, { recursive: true });
+  const activityFixture = process.env.CRM_ACTIVITY_FIXTURE ? JSON.parse(await readFile(process.env.CRM_ACTIVITY_FIXTURE, 'utf8')) : {
+    version: 'QA-ACT-v1', hash: 'd'.repeat(64), introduction: 'Ocho actividades de interés. Con Buena Compañía no presta transporte; los acompañantes no conducen. Si necesita taxi, registre un contacto o autorice su coordinación.', scopeNotice: 'En ninguna actividad se permite conducir vehículos ni realizar oficios domésticos, como lavar platos, cocinar o limpiar.', commonExclusion: 'No se permite conducir ni realizar oficios domésticos.', taxiAuthorizationText: 'Autorizo a coordinar un taxi de confianza prestado por un tercero.',
+    activities: ['Citas médicas, terapias o exámenes', 'Mercado y compras del hogar', 'Diligencias bancarias, notariales o administrativas', 'Compras personales', 'Recogida en farmacia', 'Trámites institucionales', 'Equipos y herramientas digitales', 'Compañía, bienestar y juegos'].map((title, index) => ({ id: `qa-activity-${index + 1}`, title, description: 'Acompañamiento respetuoso según el alcance de esta actividad.', exclusions: ['No representar a la persona ni tomar decisiones por ella.', 'No realizar tareas ajenas al acompañamiento.'] })),
+  };
   try {
-    for (const width of [320, 375, 390, 768, 1440]) {
+    for (const width of (process.env.CRM_QA_WIDTHS ? process.env.CRM_QA_WIDTHS.split(',').map(Number) : [320, 375, 390, 768, 1440])) {
+      const activityCatalog = structuredClone(activityFixture);
+      const expectedTransport = width === 390 ? 'authorize-taxi' : width === 1440 ? 'not-needed' : 'trusted-taxi';
       const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
       const page = await context.newPage();
       const errors = [];
@@ -18,6 +24,7 @@ const path = require('node:path');
       let authenticated = false;
       let changed = false;
       let posts = 0;
+      let activityCatalogOffline = false;
       const privacy = { configured: width === 1440, version: 'QA-v1', hash: 'a'.repeat(64), paragraphs: [
         { title: 'Autorización para el acompañamiento', text: 'Aviso de prueba: información reservada para evaluar, organizar y prestar el acompañamiento.' },
         { title: 'Reserva y derechos', text: 'La persona puede consultar y rectificar su información a través del equipo que gestiona el servicio. La política de tratamiento de datos aún no está publicada.' },
@@ -38,6 +45,10 @@ const path = require('node:path');
         else if (url.pathname === '/auth/logout') { authenticated = false; data = { ok: true }; }
         else if (url.pathname === '/auth/session') data = { user: { ...user, mustChangePassword: !changed } };
         else if (url.pathname === '/clients/privacy-notice') data = privacy;
+        else if (url.pathname === '/clients/activity-options') {
+          if (activityCatalogOffline) { status = 503; data = { message: 'Catálogo temporalmente no disponible.' }; }
+          else data = activityCatalog;
+        }
         else if (url.pathname === '/clients' && route.request().method() === 'POST') {
           const saved = route.request().postDataJSON();
           posts++;
@@ -53,6 +64,18 @@ const path = require('node:path');
           assert.equal(saved.guardianAddress, 'Calle del acudiente 20');
           assert.equal(saved.guardianPhone, '+57 300 123 4567');
           assert.deepEqual(JSON.parse(saved.emergencyContacts), JSON.parse(record.emergencyContacts));
+          assert.equal(saved.activitySelection.catalogVersion, activityCatalog.version);
+          assert.equal(saved.activitySelection.catalogHash, activityCatalog.hash);
+          assert.deepEqual(saved.activitySelection.selectedIds, [activityCatalog.activities[0].id, activityCatalog.activities[7].id]);
+          assert.equal(saved.activitySelection.transportMode, expectedTransport);
+          assert.equal(saved.activitySelection.taxiCoordinationAuthorized, expectedTransport === 'authorize-taxi');
+          assert.equal(saved.activitySelection.taxiContacts.length, expectedTransport === 'trusted-taxi' ? 2 : 0);
+          if (expectedTransport === 'authorize-taxi') assert.equal(saved.activitySelection.taxiAuthorizationName, 'Acudiente QA');
+          if (expectedTransport === 'trusted-taxi') assert.equal(saved.activitySelection.taxiContacts[0].name, 'Conductor QA');
+          assert.equal(saved._activityTaxiMode, undefined);
+          assert.equal(saved._activityDraft, undefined);
+          record.independentActivities = JSON.stringify(activityCatalog.activities.filter((activity) => saved.activitySelection.selectedIds.includes(activity.id)).map((activity) => activity.title));
+          record.activityPreferences = JSON.stringify({ catalogVersion: activityCatalog.version, selectedActivities: activityCatalog.activities.filter((activity) => saved.activitySelection.selectedIds.includes(activity.id)), scopeNotice: activityCatalog.scopeNotice, transportMode: expectedTransport, taxiContacts: saved.activitySelection.taxiContacts, taxiAuthorization: { accepted: saved.activitySelection.taxiCoordinationAuthorized, authorizedBy: saved.activitySelection.taxiAuthorizationName, recordedAt: new Date().toISOString(), text: activityCatalog.taxiAuthorizationText } });
           record.dataAuthorization = JSON.stringify({ ...saved.authorization, recordedAt: new Date().toISOString(), noticeText: privacy.paragraphs.map((item) => item.text).join('\n') });
           data = record;
         }
@@ -91,6 +114,7 @@ const path = require('node:path');
       await page.locator('#detail-content .detail-section').first().waitFor();
       assert.equal(await page.locator('#detail-content .detail-section').count(), 8);
       assert.ok((await page.locator('#detail-content').textContent()).includes('No se presume su aceptación'));
+      assert.ok((await page.locator('#detail-content').textContent()).includes('Actividades del formulario anterior'));
       assert.ok((await page.locator('#detail-content').textContent()).includes('Contacto QA'));
       assert.ok(!(await page.locator('#detail-content').textContent()).includes('[object Object]'));
       await checkBounds('detail');
@@ -158,6 +182,42 @@ const path = require('node:path');
           assert.equal(await page.locator('[name=mobilityNotes]').isDisabled(), true);
           assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('cbc-client-draft:qa-user')).mobilityNotes), undefined);
         }
+        if (stage === 5) {
+          await page.waitForFunction(() => document.querySelectorAll('#activities-options .activity-card').length === 8);
+          assert.equal(await page.locator('.activity-description').count(), 8);
+          assert.equal(await page.locator('.activity-exclusions').count(), 8);
+          await page.locator('#activities-options input').nth(0).check();
+          await page.locator('#activities-options input').nth(7).check();
+          await page.locator('#next-button').click();
+          assert.ok((await page.locator('#activity-selection-error').textContent()).includes('traslados'));
+          await page.locator('[data-activity-transport-mode][value="trusted-taxi"]').check();
+          await page.locator('#next-button').click();
+          assert.ok((await page.locator('#activity-selection-error').textContent()).includes('nombre'));
+          await page.locator('[data-taxi-field=name]').first().fill('Conductor QA');
+          await page.locator('[data-taxi-field=phone]').first().fill('+57 300 123 4567');
+          await page.locator('[data-taxi-field=company]').first().fill('Central QA');
+          await page.locator('[data-taxi-field=plate]').first().fill('ABC123');
+          await page.locator('#activity-add-taxi').click();
+          await page.locator('[data-taxi-field=name]').nth(1).fill('Otro contacto QA');
+          await page.locator('[data-taxi-field=phone]').nth(1).fill('3112223344');
+          await page.locator('[data-activity-transport-mode][value="authorize-taxi"]').check();
+          assert.equal(await page.evaluate(() => window.CBC_ACTIVITIES.serialize().taxiContacts.length), 0);
+          assert.equal(await page.locator('#activity-taxi-authorization').isChecked(), false);
+          await page.locator('#next-button').click();
+          assert.ok((await page.locator('#activity-selection-error').textContent()).includes('autorización'));
+          await page.locator('#activity-taxi-authorizer').fill('');
+          await page.locator('#next-button').click();
+          assert.ok((await page.locator('#activity-selection-error').textContent()).includes('quién autoriza'));
+          await page.locator('#activity-taxi-authorizer').fill('Acudiente QA');
+          await page.locator('#activity-taxi-authorization').check();
+          if (expectedTransport !== 'authorize-taxi') await page.locator(`[data-activity-transport-mode][value="${expectedTransport}"]`).check();
+          assert.equal(await page.evaluate(() => window.CBC_ACTIVITIES.serialize().taxiCoordinationAuthorized), expectedTransport === 'authorize-taxi');
+          if (expectedTransport === 'trusted-taxi') assert.equal(await page.locator('[data-taxi-field=name]').first().inputValue(), 'Conductor QA');
+          if ([390, 1440].includes(width)) {
+            await page.locator('.activity-card').first().screenshot({ path: path.join(artifacts, `activity-card-${width}.png`) });
+            await page.locator('.activity-transport').screenshot({ path: path.join(artifacts, `activity-transport-${width}.png`) });
+          }
+        }
         if (stage === 7) {
           await page.locator('#emergency-use-guardian').check();
           assert.ok((await page.locator('#emergency-guardian-summary').textContent()).includes('Acudiente QA'));
@@ -183,9 +243,24 @@ const path = require('node:path');
           await page.locator('#emergency-edit-guardian').click();
           await page.locator('[name=payerName]').fill('Acudiente QA');
           await page.locator('.progress-step[data-step="7"]').click();
+          if (width === 390) activityCatalogOffline = true;
           await page.reload();
           await page.locator('#crm-app').waitFor({ state: 'visible' });
           await page.waitForFunction(() => window.CBC_PRIVACY.allowed());
+          if (width === 390) {
+            await page.waitForFunction(() => document.querySelector('#activities-status').textContent.includes('temporalmente'));
+            await page.locator('.progress-step[data-step="7"]').click();
+            await page.locator('[name=finalNotes]').fill('Notas QA mientras el catálogo no está disponible');
+            await page.locator('#save-button').click();
+            assert.equal(posts, 0);
+            assert.ok((await page.locator('#activity-selection-error').textContent()).includes('Carga y revisa'));
+            activityCatalogOffline = false;
+            await page.reload();
+            await page.locator('#crm-app').waitFor({ state: 'visible' });
+            await page.waitForFunction(() => window.CBC_PRIVACY.allowed());
+          }
+          await page.waitForFunction(() => window.CBC_ACTIVITIES.serialize()?.selectedIds.length === 2);
+          assert.equal(await page.evaluate(() => window.CBC_ACTIVITIES.serialize().transportMode), expectedTransport);
           await page.locator('.progress-step[data-step="7"]').click();
           assert.equal(await page.locator('#privacy-sensitive').isChecked(), false);
           assert.equal(await page.locator('#emergency-use-guardian').isChecked(), true);
@@ -221,20 +296,51 @@ const path = require('node:path');
             await page.locator('#privacy-personal').check();
             await page.locator('#privacy-truth').check();
             await page.locator('.progress-step[data-step="7"]').click();
+            await page.locator('.progress-step[data-step="5"]').click();
+            activityCatalog.version = 'QA-ACT-v2';
+            activityCatalog.hash = 'e'.repeat(64);
+            await page.locator('#activities-reload').click();
+            await page.waitForFunction(() => window.CBC_ACTIVITIES.serialize()?.catalogHash === 'e'.repeat(64));
+            assert.equal(await page.locator('#activities-options input:checked').count(), 0);
+            assert.equal(await page.locator('#activity-taxi-authorization').isChecked(), false);
+            assert.equal(await page.locator('#activities-updated').isVisible(), true);
+            await page.locator('#activities-options input').nth(0).check();
+            await page.locator('#activities-options input').nth(7).check();
+            await page.locator('#activity-taxi-authorization').check();
+            await page.locator('.progress-step[data-step="7"]').click();
           }
           if (width === 390) await page.screenshot({ path: path.join(artifacts, 'emergency-mobile.png'), fullPage: true });
         }
         await checkBounds(`visit ${stage + 1}`);
       }
+      if (width === 390) {
+        await page.locator('.progress-step[data-step="5"]').click();
+        await page.locator('#activity-taxi-authorization').uncheck();
+        await page.locator('.progress-step[data-step="4"]').click();
+        await page.locator('.progress-step[data-step="7"]').click();
+        await page.locator('#save-button').click();
+        assert.equal(posts, 0);
+        assert.equal(await page.locator('[data-panel="5"]').isVisible(), true);
+        await page.locator('#activity-taxi-authorization').check();
+        await page.locator('.progress-step[data-step="7"]').click();
+      }
       await page.locator('#save-button').click();
       await page.locator('#success-message').waitFor({ state: 'visible' });
       assert.equal(posts, 1);
       await checkBounds('saved');
+      await page.locator('[data-route=clients]').click();
+      await page.locator('#client-records [data-detail]').click();
+      await page.locator('#detail-content .detail-section').first().waitFor();
+      assert.ok((await page.locator('#detail-content').textContent()).includes(expectedTransport === 'trusted-taxi' ? 'Conductor QA' : expectedTransport === 'authorize-taxi' ? 'Acudiente QA' : 'traslado resuelto'));
+      await page.locator('#close-detail').click();
+      await page.evaluate(() => { location.hash = 'new-visit'; });
       await page.locator('#new-client-button').click();
       assert.equal(await page.locator('#privacy-personal').isChecked(), false);
       assert.equal(await page.locator('#privacy-truth').isChecked(), false);
       assert.equal(await page.locator('#privacy-sensitive').isChecked(), false);
       assert.equal(await page.locator('[name=fullName]').inputValue(), '');
+      assert.equal(await page.locator('#activity-taxi-authorization').isChecked(), false);
+      assert.equal(await page.locator('#activities-options input:checked').count(), 0);
       assert.equal(await page.evaluate(() => sessionStorage.getItem('cbc-client-draft:qa-user')), null);
       await page.locator('#logout-button').click();
       await page.locator('#login-screen').waitFor({ state: 'visible' });
