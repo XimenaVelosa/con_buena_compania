@@ -139,13 +139,22 @@
 
   const sections = [
     ['01 · Datos de la visita', [['visitDate', 'Fecha'], ['visitTime', 'Hora'], ['visitLocation', 'Lugar / zona'], ['visitAgentName', 'Responsable de la visita'], ['visitLatitude', 'Latitud'], ['visitLongitude', 'Longitud']]],
-    ['02 · Información de la persona', [['fullName', 'Nombre completo'], ['approximateAge', 'Edad aproximada'], ['phone', 'Teléfono'], ['address', 'Dirección de residencia']]],
-    ['03 · Solicitud y acudiente', [['requesterName', 'Persona que solicita'], ['requesterRelationship', 'Parentesco'], ['payerName', 'Nombre completo del acudiente'], ['guardianIdNumber', 'Cédula del acudiente'], ['guardianAddress', 'Dirección del acudiente'], ['guardianPhone', 'Celular del acudiente'], ['knowsVisit', 'Conoce y acepta la visita']]],
-    ['04 · Movilidad', [['mobilityNeeds', 'Movilidad y apoyos'], ['mobilityNotes', 'Observaciones']]],
-    ['05 · Autonomía y actividades', [['independentActivities', 'Actividades solicitadas'], ['independenceNotes', 'Observaciones y otras actividades solicitadas']]],
-    ['06 · Entorno y seguridad', [['homeAccessConditions', 'Condiciones del entorno'], ['medicationSupport', 'Medicamentos y procedimientos'], ['personalCareSupport', 'Cuidado personal'], ['homeSafetyNotes', 'Seguridad'], ['homeSafetyConditions', 'Condiciones especiales']]],
-    ['07 · Cierre', [['outingConditions', 'Condiciones para salidas'], ['transportPlan', 'Transporte'], ['emergencyContacts', 'Contactos de emergencia'], ['preferences', 'Preferencias'], ['visitConclusion', 'Conclusión'], ['recommendedServices', 'Servicios recomendados'], ['nextContact', 'Próximo contacto'], ['finalNotes', 'Observaciones finales']]],
+    ['02 · Autorización y veracidad', [['dataAuthorization', 'Registro de la autorización']]],
+    ['03 · Información de la persona', [['fullName', 'Nombre completo'], ['approximateAge', 'Edad aproximada'], ['phone', 'Teléfono'], ['address', 'Dirección de residencia']]],
+    ['04 · Solicitud y acudiente', [['requesterName', 'Persona que solicita'], ['requesterRelationship', 'Parentesco'], ['payerName', 'Nombre completo del acudiente'], ['guardianIdNumber', 'Cédula del acudiente'], ['guardianAddress', 'Dirección del acudiente'], ['guardianPhone', 'Celular del acudiente'], ['knowsVisit', 'Conoce y acepta la visita']]],
+    ['05 · Movilidad', [['mobilityNeeds', 'Movilidad y apoyos'], ['mobilityNotes', 'Observaciones']]],
+    ['06 · Autonomía y actividades', [['independentActivities', 'Actividades solicitadas'], ['independenceNotes', 'Observaciones y otras actividades solicitadas']]],
+    ['07 · Entorno y seguridad', [['homeAccessConditions', 'Condiciones del entorno'], ['medicationSupport', 'Medicamentos y procedimientos'], ['personalCareSupport', 'Cuidado personal'], ['homeSafetyNotes', 'Seguridad'], ['homeSafetyConditions', 'Condiciones especiales']]],
+    ['08 · Cierre', [['outingConditions', 'Condiciones para salidas'], ['transportPlan', 'Transporte'], ['emergencyContacts', 'Contactos de emergencia'], ['preferences', 'Preferencias'], ['visitConclusion', 'Conclusión'], ['recommendedServices', 'Servicios recomendados'], ['nextContact', 'Próximo contacto'], ['finalNotes', 'Observaciones finales']]],
   ];
+
+  function authorizationText(value) {
+    if (!value) return 'Este informe anterior no tiene una autorización registrada en el sistema. No se presume su aceptación.';
+    let data;
+    try { data = JSON.parse(value); } catch { return String(value); }
+    if (!data || typeof data !== 'object') return 'Sin registro verificable de autorización.';
+    return [`Persona: ${data.signerName || 'Sin registrar'}`, `Calidad: ${data.signerRole === 'titular' ? 'Titular' : 'Representante o persona legitimada'}`, ...(data.representativeBasis ? [`Fundamento de representación: ${data.representativeBasis}`] : []), `Datos personales: ${data.personalData === true ? 'Autorizados' : 'No autorizados'}`, `Veracidad: ${data.truthfulness === true ? 'Confirmada' : 'No confirmada'}`, `Datos sensibles: ${data.sensitiveData === true ? 'Autorizados de forma explícita' : 'No autorizados'}`, `Fecha de registro: ${data.recordedAt || 'Sin registrar'}`, `Versión: ${data.version || 'Sin registrar'}`, '', 'Texto presentado:', data.noticeText || 'Sin registrar'].join('\n');
+  }
 
   function emergencyContactsText(value) {
     let contacts;
@@ -178,7 +187,7 @@
       const record = await api(`/clients/${encodeURIComponent(id)}`);
       if (detailId !== id || !dialog.open || !user) return;
       $('#detail-title').textContent = record.fullName;
-      $('#detail-content').innerHTML = sections.map(([title, fields]) => `<section class="detail-section"><h3>${escape(title)}</h3><dl>${fields.map(([key, label]) => `<div><dt>${escape(label)}</dt><dd>${escape(key === 'visitDate' ? date(record[key]) : key === 'emergencyContacts' ? emergencyContactsText(record[key]) : fieldText(record[key]))}</dd></div>`).join('')}</dl></section>`).join('');
+      $('#detail-content').innerHTML = sections.map(([title, fields]) => `<section class="detail-section"><h3>${escape(title)}</h3><dl>${fields.map(([key, label]) => `<div><dt>${escape(label)}</dt><dd>${escape(key === 'visitDate' ? date(record[key]) : key === 'dataAuthorization' ? authorizationText(record[key]) : key === 'emergencyContacts' ? emergencyContactsText(record[key]) : fieldText(record[key]))}</dd></div>`).join('')}</dl></section>`).join('');
     } catch (error) {
       if (dialog.open && detailId === id) { $('#detail-title').textContent = 'No se pudo abrir la ficha'; $('#detail-content').textContent = error.message; }
     }

@@ -43,6 +43,15 @@ test('CRM proxy validates routes, requires explicit writes and forwards private 
     await handler({ method: 'GET', url: '/api/proxy', query: { route: 'auth/session' }, headers: { cookie: 'cbc_admin_session=opaque' } }, res);
     assert.equal(res.code, 200);
     res = response();
+    global.fetch = async (url) => {
+      assert.equal(String(url), 'https://api.example.com/clients/privacy-notice');
+      return { status: 200, headers: { getSetCookie: () => [] }, text: async () => '{"version":"QA","configured":true}' };
+    };
+    await handler({ method: 'GET', url: '/api/proxy?route=clients%2Fprivacy-notice', headers: { cookie: 'cbc_admin_session=opaque' } }, res);
+    assert.equal(res.code, 200);
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+    assert.equal(JSON.parse(res.body).version, 'QA');
+    res = response();
     await handler({ method: 'GET', url: '/api/proxy?route=https://attacker.example', headers: {} }, res);
     assert.equal(res.code, 404);
     global.fetch = async () => { throw new Error('offline'); };

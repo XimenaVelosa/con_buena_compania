@@ -1,5 +1,5 @@
 // Emergency contacts are serialized into the existing emergencyContacts field.
-// Guardian data is read again at save time, so edits in panel 3 stay in sync.
+// Guardian data is read again at save time, so edits in the guardian panel stay in sync.
 (() => {
   const form = document.querySelector('#client-form');
   const useGuardian = document.querySelector('#emergency-use-guardian');
@@ -46,8 +46,8 @@
         summary.append(item);
       }
       document.querySelector('#emergency-guardian-hint').textContent = guardian.fullName && guardian.phone
-        ? 'Estos datos se toman del panel 3 y se actualizan si modificas el acudiente.'
-        : 'Completa el nombre y el celular del acudiente en el panel 3 para usarlo como contacto de emergencia.';
+        ? 'Estos datos se toman del panel 4 y se actualizan si modificas el acudiente.'
+        : 'Completa el nombre y el celular del acudiente en el panel 4 para usarlo como contacto de emergencia.';
     }
     error.textContent = '';
     form.elements.emergencyContacts.value = serialize();
@@ -81,7 +81,7 @@
     error.textContent = '';
     const guardian = readGuardian();
     if (useGuardian.checked && (!guardian.fullName || !guardian.phone)) {
-      error.textContent = 'Completa el nombre y el celular del acudiente en el panel 3, o desmarca esta opción.';
+      error.textContent = 'Completa el nombre y el celular del acudiente en el panel 4, o desmarca esta opción.';
       document.querySelector('#emergency-edit-guardian').focus();
       return false;
     }

@@ -1,6 +1,6 @@
 # Frontend
 
-CRM de Con Buena Compañía con inicio de sesión administrativo, panel de resumen, clientes con búsqueda y ficha, y visitas a clientes con el formulario de siete etapas. Diseño mobile-first con el PNG original de marca.
+CRM de Con Buena Compañía con inicio de sesión administrativo, panel de resumen, clientes con búsqueda y ficha, y visitas a clientes con el formulario de ocho etapas. Diseño mobile-first con el PNG original de marca.
 
 ## Probar localmente
 
@@ -20,7 +20,15 @@ La aplicación no contiene credenciales de demostración ni listas de clientes f
 
 ## Contactos de emergencia
 
-El panel 7 permite seleccionar al acudiente del panel 3, agregar un contacto adicional o ambas opciones. Cada contacto incluye nombre, cédula, dirección y celular. Se serializan como una lista JSON en el campo de texto `emergencyContacts` existente; no se requiere una migración de base de datos. Los registros antiguos de texto libre siguen mostrándose en la ficha. Los borradores guardan también el estado de las opciones y conservan los campos del contacto adicional si se desmarca temporalmente.
+El panel 8 permite seleccionar al acudiente del panel 4, agregar un contacto adicional o ambas opciones. Cada contacto incluye nombre, cédula, dirección y celular. Se serializan como una lista JSON en el campo de texto `emergencyContacts` existente; no se requiere una migración de base de datos. Los registros antiguos de texto libre siguen mostrándose en la ficha. Los borradores guardan también el estado de las opciones y conservan los campos del contacto adicional si se desmarca temporalmente.
+
+## Autorización de datos personales
+
+El paso 2 carga el aviso vigente desde `GET /clients/privacy-notice`. Antes de recoger la ubicación o información de la persona se solicita la autorización de datos personales y la declaración de veracidad. No se guardan borradores antes de esa decisión. La casilla de datos sensibles de salud es independiente y opcional; sin ella se puede completar el informe y se excluyen las respuestas de movilidad, medicamentos y cuidado personal tanto del borrador como del envío.
+
+Ninguna casilla viene aceptada. Se identifica al titular o a quien esté legitimado para representarlo; en este último caso se registra el fundamento, sin considerar el parentesco una acreditación de representación. Una nueva visita limpia estas decisiones. Un borrador solo recupera las decisiones si coinciden la versión y el hash del aviso actual; si cambia, la persona debe revisar y aceptar nuevamente.
+
+El aviso está publicado a nombre de Con Buena Compañía y se puede aceptar sin que exista una política enlazada. Explica expresamente que la política aún no está publicada y permite contactar al equipo por el canal usado para solicitar el servicio o durante la visita. No incluye correos, teléfonos ni enlaces inventados. El nombre o razón social del responsable, correo y teléfono reales se pueden completar mediante `CRM_PRIVACY_CONTROLLER`, `CRM_PRIVACY_EMAIL` y `CRM_PRIVACY_PHONE`; `CRM_PRIVACY_POLICY_URL` añadirá el enlace cuando se publique la política. Esa información pendiente no bloquea el formulario. El backend conserva si los datos de contacto estaban completos al registrar cada declaración. La ficha muestra la autorización de cada informe; los informes anteriores no se consideran autorizados por defecto. El aviso no reemplaza la política completa ni acredita por sí solo la identidad o representación del declarante.
 
 ## Ubicación actual
 

@@ -63,6 +63,7 @@ async function resolveAddress(latitude, longitude) {
 }
 
 locationButton.addEventListener('click', () => {
+  if (!window.CBC_PRIVACY.allowed()) { document.dispatchEvent(new Event('cbc:edit-authorization')); return; }
   const requestingUserId = window.CBC_CRM?.user?.id;
   if (!requestingUserId) return;
   locationHelp.hidden = true;
@@ -75,7 +76,7 @@ locationButton.addEventListener('click', () => {
   locationButton.textContent = 'Obteniendo ubicación…';
   locationStatus.textContent = 'Acepta el permiso de ubicación para continuar.';
   navigator.geolocation.getCurrentPosition(async (position) => {
-    if (window.CBC_CRM?.user?.id !== requestingUserId) return;
+    if (window.CBC_CRM?.user?.id !== requestingUserId || !window.CBC_PRIVACY.allowed()) return;
     const latitude = position.coords.latitude.toFixed(6);
     const longitude = position.coords.longitude.toFixed(6);
     if (includeVisitCoordinates) {
@@ -89,7 +90,7 @@ locationButton.addEventListener('click', () => {
     saveDraft();
     try {
       const address = await resolveAddress(latitude, longitude);
-      if (window.CBC_CRM?.user?.id !== requestingUserId) return;
+      if (window.CBC_CRM?.user?.id !== requestingUserId || !window.CBC_PRIVACY.allowed()) return;
       if (locationField.value === previousAddress) locationField.value = address;
       locationStatus.textContent = includeVisitCoordinates
         ? 'Revisa la dirección aproximada. Las coordenadas se incluirán por separado al guardar el informe.'
@@ -101,9 +102,11 @@ locationButton.addEventListener('click', () => {
     } finally {
       locationButton.disabled = false;
       locationButton.textContent = '✓ Ubicación capturada';
+      window.CBC_PRIVACY.sync();
       saveDraft();
     }
   }, (error) => {
+    if (window.CBC_CRM?.user?.id !== requestingUserId || !window.CBC_PRIVACY.allowed()) { window.CBC_PRIVACY.sync(); return; }
     locationButton.disabled = false;
     locationButton.textContent = '⌖ Usar ubicación actual';
     locationStatus.textContent = 'No fue posible obtener la ubicación. Revisa el permiso del navegador.';
@@ -132,7 +135,7 @@ function prefillResidenceAddress() {
 function collectFormData() {
   const data = {};
   for (const field of form.elements) {
-    if (!field.name) continue;
+    if (!field.name || field.disabled) continue;
     if (field.type === 'checkbox') {
       if (field.name === 'knowsVisit') data.knowsVisit = field.checked;
       else if (field.checked) { data[field.name] ??= []; data[field.name].push(field.value); }
@@ -140,6 +143,8 @@ function collectFormData() {
   }
   for (const field of multiSelectFields) data[field] = JSON.stringify(data[field] || []);
   data.emergencyContacts = window.CBC_EMERGENCY.serialize();
+  data.authorization = window.CBC_PRIVACY.serialize();
+  if (!data.authorization.sensitiveData) for (const name of window.CBC_PRIVACY.sensitiveFields) delete data[name];
   if (data.approximateAge) data.approximateAge = Number(data.approximateAge);
   if (data.visitLatitude) data.visitLatitude = Number(data.visitLatitude);
   if (data.visitLongitude) data.visitLongitude = Number(data.visitLongitude);
@@ -147,8 +152,10 @@ function collectFormData() {
 }
 
 function setStep(step) {
-  if (step === 1) prefillResidenceAddress();
-  if (step === 6) window.CBC_EMERGENCY.sync();
+  if (step > 1 && !window.CBC_PRIVACY.allowed()) step = 1;
+  if (step === 2) prefillResidenceAddress();
+  if (step === 7) window.CBC_EMERGENCY.sync();
+  window.CBC_PRIVACY.sync();
   currentStep = step;
   panels.forEach((panel, index) => panel.classList.toggle('active', index === step));
   steps.forEach((item, index) => { item.classList.toggle('active', index === step); item.classList.toggle('complete', index < step); });
@@ -159,6 +166,10 @@ function setStep(step) {
 
 function saveDraft() {
   if (!window.CBC_CRM?.user) return;
+  if (!window.CBC_PRIVACY.allowed()) {
+    try { sessionStorage.removeItem(draftKey()); } catch { /* Storage may be disabled. */ }
+    return;
+  }
   try { sessionStorage.setItem(draftKey(), JSON.stringify({ ...collectFormData(), _emergencyDraft: window.CBC_EMERGENCY.draft() })); } catch { /* The form stays usable when browser storage is unavailable. */ }
 }
 function restoreDraft() {
@@ -175,21 +186,24 @@ function restoreDraft() {
     else fields[0].value = value;
   });
   window.CBC_EMERGENCY.restore(data.emergencyContacts, data._emergencyDraft);
+  window.CBC_PRIVACY.restore(data.authorization);
 }
 function validateCurrentStep() {
-  if (currentStep === 6) return window.CBC_EMERGENCY.validate();
-  if (currentStep !== 1) return true;
+  if (currentStep === 1) return window.CBC_PRIVACY.validate();
+  if (currentStep === 7) return window.CBC_EMERGENCY.validate();
+  if (currentStep !== 2) return true;
   const fullName = form.elements.fullName.value.trim();
   if (!fullName) { errorMessage.textContent = 'Escribe el nombre completo de la persona usuaria para continuar.'; form.elements.fullName.focus(); return false; }
   return true;
 }
 nextButton.addEventListener('click', () => { if (!validateCurrentStep()) return; saveDraft(); setStep(Math.min(currentStep + 1, panels.length - 1)); });
 backButton.addEventListener('click', () => setStep(Math.max(currentStep - 1, 0)));
-steps.forEach((step) => step.addEventListener('click', () => { const target = Number(step.dataset.step); if (target <= currentStep || validateCurrentStep()) setStep(target); }));
+steps.forEach((step) => step.addEventListener('click', () => { const target = Number(step.dataset.step); if (target > 1 && !window.CBC_PRIVACY.allowed()) { setStep(1); window.CBC_PRIVACY.validate(); return; } if (target <= currentStep || validateCurrentStep()) setStep(target); }));
 form.addEventListener('input', saveDraft); form.addEventListener('change', saveDraft);
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); if (!validateCurrentStep()) return;
-  if (!form.elements.fullName.value.trim()) { setStep(1); form.elements.fullName.focus(); return; }
+  if (!window.CBC_PRIVACY.allowed()) { setStep(1); window.CBC_PRIVACY.validate(); return; }
+  if (!form.elements.fullName.value.trim()) { setStep(2); form.elements.fullName.focus(); return; }
   saveButton.disabled = true; saveButton.textContent = 'Guardando…';
   try {
     await window.CBC_CRM.api('/clients', { method: 'POST', body: JSON.stringify(collectFormData()) });
@@ -203,6 +217,7 @@ form.addEventListener('submit', async (event) => {
 function resetVisit() {
   form.reset();
   window.CBC_EMERGENCY.reset();
+  window.CBC_PRIVACY.reset();
   form.hidden = false;
   document.querySelector('.progress').hidden = false;
   successMessage.hidden = true;
@@ -212,8 +227,12 @@ function resetVisit() {
   [locationButton, document.querySelector('#residence-location-button')].forEach((button) => { button.textContent = '⌖ Usar ubicación actual'; });
   setStep(0);
 }
-document.querySelector('#new-client-button').addEventListener('click', resetVisit);
-document.addEventListener('cbc:edit-guardian', () => { saveDraft(); setStep(2); form.elements.payerName.focus(); });
+document.querySelector('#new-client-button').addEventListener('click', () => {
+  try { sessionStorage.removeItem(draftKey()); } catch { /* Storage may be disabled. */ }
+  resetVisit();
+});
+document.addEventListener('cbc:edit-guardian', () => { saveDraft(); setStep(3); form.elements.payerName.focus(); });
+document.addEventListener('cbc:edit-authorization', () => { saveDraft(); setStep(1); });
 document.addEventListener('cbc:authenticated', () => { resetVisit(); restoreDraft(); });
 document.addEventListener('cbc:logout', (event) => {
   if (event.detail?.id) { try { sessionStorage.removeItem(`cbc-client-draft:${event.detail.id}`); } catch { /* Storage may be disabled. */ } }
