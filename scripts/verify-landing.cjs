@@ -83,15 +83,13 @@ const path = require('node:path');
         assert.equal(await page.locator('#service-video').isVisible(), false);
         assert.equal(await page.locator('#service-video').getAttribute('src'), null);
         assert.equal(await page.locator('#service-video-error').isVisible(), false);
-        assert.equal(await page.locator('.service-considerations').evaluate((element) => element.open), false, 'Scope starts collapsed below video');
         const frame = await page.locator('.service-video-frame').boundingBox();
         assert.ok(Math.abs(frame.width / frame.height - 16 / 9) < .02, 'Video stays 16:9 at every viewport');
         if (index === 0 && [390, 1440].includes(width)) {
           await page.locator('.service-experience').scrollIntoViewIfNeeded();
           await page.locator('#service-dialog').screenshot({ path: path.join(artifacts, `landing-video-${width}.png`) });
         }
-        await page.locator('.service-considerations summary').click();
-        assert.equal(await page.locator('#service-dialog-considerations').isVisible(), true);
+        assert.equal(await page.locator('#service-dialog-exclusions').isVisible(), true);
         await page.locator('#service-dialog').evaluate((element) => { element.scrollTop = element.scrollHeight; });
         const close = await page.locator('#service-dialog-close').boundingBox();
         assert.ok(close.y >= 0 && close.y + close.height <= 901, 'Dialog close control remains available while scrolling');
