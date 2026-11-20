@@ -33,6 +33,7 @@ const path = require('node:path');
               { id: 'delegated-errands', title: 'Diligencias por encargo', description: 'Radicar, recoger o entregar documentos con autorización.', exclusions: ['Hacer trámites que exijan presencia personal.'] },
             ] },
             { title: 'Vida espiritual', activities: [{ id: 'religious-companionship', title: 'Acompañamiento religioso', description: 'Compañía para rezar el rosario o asistir a misa.', exclusions: ['Oficiar ceremonias.'] }] },
+            { title: 'Otras actividades', activities: [{ id: 'family-album', title: 'Álbum familiar', description: 'Recopilar fotos e historias y reconstruir el álbum.', exclusions: ['Compartir fotos sin autorización.'] }] },
           ],
           days: ['Lunes'],
           departments: { 17: { name: 'Caldas', municipalities: { 17001: 'Manizales' } } },
@@ -44,7 +45,8 @@ const path = require('node:path');
       assert.equal(response.status(), 200);
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.fonts.check('800 16px Nunito')), true, 'Self-hosted brand font is loaded');
-      assert.equal(await page.locator('.service-card').count(), 10);
+      assert.equal(await page.locator('#public-activities .service-card').count(), 10);
+      assert.equal(await page.getByRole('region', { name: 'Otras actividades' }).locator('.service-card').count(), 1);
       assert.equal(await page.locator('input[type=file], #client-form').count(), 0, 'Public landing has no authoring controls or CRM form');
       assert.equal(await page.locator('.brand img').getAttribute('src'), '/brand-logo.png');
       assert.equal(await page.locator('.footer-brand img').getAttribute('src'), '/brand-logo.png');
@@ -82,7 +84,8 @@ const path = require('node:path');
       await page.getByRole('checkbox', { name: 'Acompañamiento religioso' }).check();
       await page.locator('#request-groups [value=personal-errands]').check();
       await page.locator('#request-groups [value=delegated-errands]').check();
-      assert.equal(await page.locator('#request-groups input:checked').count(), 3);
+      await page.getByRole('group', { name: 'Otras actividades' }).getByRole('checkbox', { name: 'Álbum familiar' }).check();
+      assert.equal(await page.locator('#request-groups input:checked').count(), 4);
       await page.locator('#request-next').click();
       await page.locator('#request-details input[name=department]').fill('caldas');
       assert.equal(await page.locator('#request-municipalities option').getAttribute('value'), 'Manizales');
@@ -96,7 +99,7 @@ const path = require('node:path');
       await page.waitForFunction(() => document.querySelector('#activities-next').disabled);
       await page.keyboard.press('Home');
       await page.waitForFunction(() => document.querySelector('#activities-previous').disabled);
-      for (const index of (width === 320 ? [...Array(10).keys()] : [0, 2, 3, 9])) {
+      for (const index of (width === 320 ? [...Array(11).keys()] : [0, 2, 3, 9, 10])) {
         const link = page.locator('[data-service]').nth(index);
         const title = await link.locator('xpath=..').locator('h3').textContent();
         await link.click();

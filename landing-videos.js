@@ -11,5 +11,6 @@ window.CBC_ACTIVITY_VIDEOS = {
   'digital-support': null,
   'wellbeing-company': null,
   'religious-companionship': null,
+  'family-album': null,
   ...(window.CBC_ACTIVITY_VIDEOS || {}),
 };

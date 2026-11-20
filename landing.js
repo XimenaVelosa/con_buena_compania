@@ -113,6 +113,10 @@
       description: 'Te acompañamos a rezar el rosario en casa o en grupo, asistir a misa o visitar la iglesia. Seguimos tus preferencias y tu ritmo durante la actividad.',
       exclusions: ['Oficiar ceremonias o asumir funciones de un ministro religioso.'],
     },
+    'family-album': {
+      description: 'Te ayudamos a recopilar fotos, nombres, fechas e historias que tu familia quiera compartir. Organizamos el material por épocas o temas, decoramos las páginas y reconstruimos álbumes incompletos o desordenados con el material disponible.',
+      exclusions: ['Retirar fotos o documentos originales, o publicar o compartir el material familiar sin tu autorización.'],
+    },
   };
 
   const dialog = document.querySelector('#service-dialog');
@@ -181,7 +185,7 @@
     document.body.classList.add('dialog-open');
     dialog.showModal();
   }
-  slider.addEventListener('click', (event) => { const link = event.target.closest('[data-service]'); if (link) { event.preventDefault(); openService(link); } });
+  slider.closest('#actividades').addEventListener('click', (event) => { const link = event.target.closest('[data-service]'); if (link) { event.preventDefault(); openService(link); } });
   document.querySelector('#service-dialog-close').addEventListener('click', () => dialog.close());
   document.querySelector('#service-dialog-back').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', (event) => {
