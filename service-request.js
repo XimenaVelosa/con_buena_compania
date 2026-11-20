@@ -11,6 +11,18 @@
   const department = form.elements.namedItem('department');
   const municipality = form.elements.namedItem('municipality');
   const normalize = (value) => value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const fieldErrors = {
+    fullName: 'Escribe tu nombre completo.',
+    email: 'Revisa tu correo electrónico. Usa un formato como nombre@ejemplo.com.',
+    phone: 'Escribe un número de celular válido.',
+    alternatePhone: 'Revisa el celular alternativo o deja ese campo vacío.',
+    department: 'Selecciona un departamento de la lista.',
+    municipality: 'Selecciona una ciudad o municipio del departamento indicado.',
+    hoursPerDay: 'Indica entre un cuarto de hora y 24 horas, en intervalos de 15 minutos.',
+    days: 'Selecciona al menos un día.',
+    activities: 'Vuelve al primer paso y revisa las actividades seleccionadas.',
+    authorized: 'Marca la autorización para poder enviar tu solicitud.',
+  };
   let options;
   let departmentCode;
   let loading = false;
@@ -92,11 +104,10 @@
   function syncLocations() {
     const selected = Object.entries(options.departments).find(([, entry]) => normalize(entry.name) === normalize(department.value));
     if (departmentCode !== selected?.[0]) {
-      municipality.value = '';
       departmentCode = selected?.[0];
+      fillList($('#request-municipalities'), selected ? Object.values(selected[1].municipalities) : []);
     }
     municipality.disabled = !selected;
-    fillList($('#request-municipalities'), selected ? Object.values(selected[1].municipalities) : []);
     const cityCode = selected && Object.entries(selected[1].municipalities)
       .find(([, name]) => normalize(name) === normalize(municipality.value))?.[0];
     department.setCustomValidity(department.value && !selected ? 'Selecciona un departamento de la lista.' : '');
@@ -147,11 +158,26 @@
     showStep(true);
   });
   $('#request-back').addEventListener('click', () => showStep(false));
-  department.addEventListener('input', syncLocations);
-  municipality.addEventListener('input', syncLocations);
+  for (const field of [department, municipality]) {
+    field.addEventListener('input', syncLocations);
+    field.addEventListener('change', syncLocations);
+  }
   for (const name of ['phone', 'alternatePhone']) {
     const input = form.elements.namedItem(name);
     input.addEventListener('input', () => input.setCustomValidity(''));
+  }
+
+  function validationMessage(data) {
+    const messages = Array.isArray(data?.message) ? data.message : [data?.message];
+    for (const message of messages) {
+      if (typeof message !== 'string') continue;
+      if (message === fieldErrors.municipality) return message;
+      const field = /^(?:each value in )?(\w+)/.exec(message)?.[1];
+      if (field === 'departmentCode') return fieldErrors.department;
+      if (field === 'municipalityCode') return fieldErrors.municipality;
+      if (Object.hasOwn(fieldErrors, field)) return fieldErrors[field];
+    }
+    return 'Revisa los datos de contacto y las opciones seleccionadas antes de enviar.';
   }
 
   form.addEventListener('submit', async (event) => {
@@ -160,25 +186,35 @@
     submitError.textContent = '';
     const municipalityCode = syncLocations();
     const data = new FormData(form);
+    const fullName = String(data.get('fullName')).trim();
+    form.elements.namedItem('fullName').setCustomValidity(fullName.length >= 2 ? '' : fieldErrors.fullName);
     const days = checked('days');
     const contact = {};
     for (const name of ['phone', 'alternatePhone']) {
       const value = String(data.get(name)).trim().replace(/[\s().-]/g, '');
-      if (value || name === 'phone') {
-        const input = form.elements.namedItem(name);
-        input.setCustomValidity(/^\+?\d{7,15}$/.test(value) ? '' : 'Escribe un número de celular válido.');
-        contact[name] = value;
-      }
+      const required = name === 'phone';
+      const valid = !required && !value || /^\+?\d{7,15}$/.test(value);
+      form.elements.namedItem(name).setCustomValidity(valid ? '' : fieldErrors[name]);
+      if (value || required) contact[name] = value;
     }
-    if (!form.reportValidity() || !municipalityCode) return;
+    if (!form.reportValidity()) {
+      const invalidField = detailsStep.querySelector('input:invalid');
+      submitError.textContent = fieldErrors[invalidField?.name] || 'Revisa los campos obligatorios.';
+      return;
+    }
+    if (!municipalityCode) {
+      submitError.textContent = fieldErrors.municipality;
+      municipality.focus();
+      return;
+    }
     if (!days.length) {
-      submitError.textContent = 'Selecciona al menos un día.';
+      submitError.textContent = fieldErrors.days;
       $('#request-days input').focus();
       return;
     }
 
     const payload = {
-      fullName: String(data.get('fullName')).trim(), email: String(data.get('email')).trim(),
+      fullName, email: String(data.get('email')).trim(),
       ...contact, departmentCode, municipalityCode, hoursPerDay: Number(data.get('hoursPerDay')),
       days, activities: checked('activities'), authorized: data.has('authorized'), noticeVersion: options.notice.version,
     };
@@ -194,7 +230,12 @@
         body: JSON.stringify({ ...payload, id: lastSubmission.id }),
         signal: AbortSignal.timeout(20000),
       });
-      if (!response.ok || !(await response.json()).received) throw new Error();
+      const result = await response.json().catch(() => null);
+      if (response.status === 400 || response.status === 422) {
+        submitError.textContent = validationMessage(result);
+        return;
+      }
+      if (!response.ok || !result?.received) throw new Error();
       form.hidden = true;
       $('#request-success').hidden = false;
       dialog.scrollTop = 0;

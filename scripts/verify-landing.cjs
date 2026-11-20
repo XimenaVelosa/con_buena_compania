@@ -91,6 +91,8 @@ const path = require('node:path');
       await page.getByRole('group', { name: 'Tecnología, compañía y bienestar' }).getByRole('checkbox', { name: 'Caminatas y ejercicio' }).check();
       assert.equal(await page.locator('#request-groups input:checked').count(), 5);
       await page.locator('#request-next').click();
+      await page.locator('#request-send').click();
+      assert.equal(await page.locator('#request-submit-error').textContent(), 'Escribe tu nombre completo.');
       await page.locator('#request-details input[name=department]').fill('caldas');
       assert.equal(await page.locator('#request-municipalities option').getAttribute('value'), 'Manizales');
       await page.locator('#request-close').click();
