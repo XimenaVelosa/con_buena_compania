@@ -135,6 +135,15 @@ h2{margin:0 0 18px;font-size:clamp(32px,7.8vw,47px);line-height:1.14;letter-spac
 .request-days legend{margin-bottom:8px;font-weight:800}
 #request-days{display:flex;flex-wrap:wrap;gap:6px 16px}
 .request-days label{align-items:center;min-height:32px;font-size:14px;cursor:pointer}
+.request-days input[type=checkbox]{appearance:none;display:grid;place-items:center;margin:0;border:1.5px solid var(--muted);border-radius:50%;background:#fff;cursor:pointer}
+.request-days input[type=checkbox]:checked{border-color:var(--purple);background:var(--purple);color:#fff}
+.request-days input[type=checkbox]:checked::after{content:"";width:5px;height:9px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.request-days input[type=checkbox]:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+@media(forced-colors:active){
+  .request-days input[type=checkbox]{forced-color-adjust:none;border-color:CanvasText;background:Canvas}
+  .request-days input[type=checkbox]:checked{border-color:Highlight;background:Highlight;color:HighlightText}
+  .request-days input[type=checkbox]:focus-visible{outline-color:CanvasText}
+}
 .request-policy{display:inline-block;margin-top:8px;color:var(--purple);font-size:13px;text-decoration:underline}
 .request-error{margin:8px 0;color:#a63049;font-size:14px}
 .request-error:empty{display:none}
