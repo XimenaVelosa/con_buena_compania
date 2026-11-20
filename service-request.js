@@ -181,8 +181,8 @@
   }
 
   function submissionError(status) {
-    if (status === 403) return 'El servidor rechazó el envío (403). Abre el formulario desde con-buena-compania.vercel.app.';
-    if (status === 404) return 'El servidor no encontró el formulario (404). Comprueba que estés en con-buena-compania.vercel.app.';
+    if (status === 403) return 'El servidor rechazó el envío (403). Abre el formulario desde conbuenacompania.com.';
+    if (status === 404) return 'El servidor no encontró el formulario (404). Comprueba que estés en conbuenacompania.com.';
     return `El servidor no confirmó el envío (HTTP ${status}). Tus datos siguen en el formulario. Vuelve a intentar.`;
   }
 
