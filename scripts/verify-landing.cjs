@@ -34,7 +34,7 @@ const path = require('node:path');
       assert.equal(logoRatio.width, 2428);
       assert.ok(Math.abs(logoRatio.rendered - logoRatio.original) < .01, 'Original logo proportions are preserved');
       async function checkBounds(label) {
-        const bounds = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth, overflowing: [...document.querySelectorAll('.site-header,.hero-copy,.hero-visual,.section-heading,.scope-note,.duration-options,.estimate,.footer-top,.footer-bottom')].filter((element) => { const r = element.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1); }).map((element) => element.className) }));
+        const bounds = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth, overflowing: [...document.querySelectorAll('.site-header,.hero-copy,.hero-visual,.section-heading,.scope-note,.contact-inner,.footer-top,.footer-bottom')].filter((element) => { const r = element.getBoundingClientRect(); return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1); }).map((element) => element.className) }));
         assert.ok(bounds.page <= bounds.viewport + 1, `${width}px ${label}: document overflow ${JSON.stringify(bounds)}`);
         assert.deepEqual(bounds.overflowing, [], `${width}px ${label}: content stays inside viewport`);
       }
@@ -44,23 +44,20 @@ const path = require('node:path');
         await menu.click();
         assert.equal(await menu.getAttribute('aria-expanded'), 'true');
         await checkBounds('mobile menu');
-        await page.locator('#public-navigation').getByRole('link', { name: 'Tarifas', exact: true }).click();
+        await page.locator('#public-navigation').getByRole('link', { name: 'Cómo funciona', exact: true }).click();
         assert.equal(await menu.getAttribute('aria-expanded'), 'false');
         await menu.click();
         await page.keyboard.press('Escape');
         assert.equal(await menu.getAttribute('aria-expanded'), 'false');
       }
-      for (const [hours, total] of [[4, '$100.000'], [8, '$200.000'], [2, '$50.000']]) {
-        await page.locator(`[data-hours="${hours}"]`).click();
-        assert.equal(await page.locator('#price-estimate').textContent(), total);
-        assert.equal(await page.locator('[data-hours][aria-pressed=true]').count(), 1);
-        const link = new URL(await page.locator('#quote-email').getAttribute('href'));
-        assert.equal(link.protocol, 'mailto:');
-        assert.equal(link.pathname, 'gerencia@conbuenacompania.com');
-        assert.ok(link.searchParams.get('subject').includes(`${hours} horas`));
-        assert.ok(link.searchParams.get('body').includes(total));
-        assert.ok(link.searchParams.get('body').includes('IVA incluido'));
-      }
+      assert.equal(await page.locator('#tarifas, [href="#tarifas"], [data-hours], #price-estimate').count(), 0);
+      if (await menu.isVisible()) await menu.click();
+      await page.getByRole('link', { name: 'Solicitar compañía' }).click();
+      await page.waitForURL((url) => url.hash === '#contacto');
+      const contactLink = new URL(await page.locator('#contacto').getByRole('link', { name: 'Hablemos' }).getAttribute('href'));
+      assert.equal(contactLink.protocol, 'mailto:');
+      assert.equal(contactLink.pathname, 'gerencia@conbuenacompania.com');
+      assert.equal(contactLink.searchParams.get('subject'), 'Solicitud de acompañamiento');
       await page.locator('#public-activities').scrollIntoViewIfNeeded();
       await page.locator('#activities-next').click();
       await page.waitForFunction(() => document.querySelector('#public-activities').scrollLeft > 5);
@@ -121,7 +118,7 @@ const path = require('node:path');
       await page.waitForURL((url) => url.pathname === '/crm' && url.hash === '#clients');
       await page.locator('#login-screen').waitFor({ state: 'visible' });
       assert.deepEqual(errors, [], 'No JavaScript errors in landing or CRM entry');
-      console.log(`OK ${width}px: original logo, mobile menu, eight service details, calculator, email links, carousel, CRM access and legacy links; no overflow.`);
+      console.log(`OK ${width}px: original logo, mobile menu, eight service details, companionship requests, email links, carousel, CRM access and legacy links; no overflow.`);
       await context.close();
     }
 

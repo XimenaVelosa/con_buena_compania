@@ -9,8 +9,6 @@
   window.addEventListener('hashchange', redirectLegacyView);
 
   const email = 'gerencia@conbuenacompania.com';
-  const rate = 25000;
-  const money = (value) => `$${new Intl.NumberFormat('es-CO').format(value)}`;
   const mailLink = (subject, body) => `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const menuButton = document.querySelector('#menu-toggle');
@@ -177,19 +175,9 @@
   });
   dialog.addEventListener('close', () => { stopVideo(); videoActivity = null; document.body.classList.remove('dialog-open'); if (opener?.isConnected) opener.focus(); });
 
-  const durationButtons = [...document.querySelectorAll('[data-hours]')];
-  function selectHours(hours) {
-    if (![2, 4, 8].includes(hours)) return;
-    durationButtons.forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.hours) === hours)));
-    const total = money(hours * rate);
-    document.querySelector('#price-estimate').textContent = total;
-    document.querySelector('#quote-email').href = mailLink(`Solicitud de acompañamiento por ${hours} horas`, `Hola, quisiera información para un acompañamiento de ${hours} horas. Valor de referencia: ${total} COP, IVA incluido. Quisiera confirmar la disponibilidad y las condiciones del servicio.`);
-  }
-  durationButtons.forEach((button) => button.addEventListener('click', () => selectHours(Number(button.dataset.hours))));
-  selectHours(2);
   document.querySelector('#copyright-year').textContent = String(new Date().getFullYear());
 
-  document.querySelectorAll('.service-card img, .pricing-visual img, #service-dialog-image').forEach((image) => image.addEventListener('error', () => {
+  document.querySelectorAll('.service-card img, #service-dialog-image').forEach((image) => image.addEventListener('error', () => {
     if (!image.src.endsWith('/images/companionship-hero.jpg')) { image.src = '/images/companionship-hero.jpg'; image.alt = 'Imagen ilustrativa de acompañamiento cotidiano'; }
   }));
 })();
