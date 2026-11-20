@@ -107,7 +107,8 @@ const path = require('node:path');
         await page.screenshot({ path: path.join(artifacts, `landing-hero-${width}.png`) });
         await page.screenshot({ path: path.join(artifacts, `landing-full-${width}.png`), fullPage: true });
       }
-      await page.locator('header [data-crm-link]').click();
+      assert.equal(await page.locator('[data-crm-link]').count(), 1);
+      await page.locator('footer [data-crm-link]').click();
       await page.waitForURL((url) => url.pathname === '/crm');
       await page.locator('#login-screen').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#client-form').isVisible(), false);
