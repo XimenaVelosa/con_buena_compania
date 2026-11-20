@@ -180,6 +180,12 @@
     return 'Revisa los datos de contacto y las opciones seleccionadas antes de enviar.';
   }
 
+  function submissionError(status) {
+    if (status === 403) return 'El servidor rechazó el envío (403). Abre el formulario desde con-buena-compania.vercel.app.';
+    if (status === 404) return 'El servidor no encontró el formulario (404). Comprueba que estés en con-buena-compania.vercel.app.';
+    return `El servidor no confirmó el envío (HTTP ${status}). Tus datos siguen en el formulario. Vuelve a intentar.`;
+  }
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (submit.disabled || detailsStep.hidden) return;
@@ -228,20 +234,25 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CRM-Request': '1' },
         body: JSON.stringify({ ...payload, id: lastSubmission.id }),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(30000),
       });
       const result = await response.json().catch(() => null);
       if (response.status === 400 || response.status === 422) {
         submitError.textContent = validationMessage(result);
         return;
       }
-      if (!response.ok || !result?.received) throw new Error();
+      if (!response.ok || !result?.received) {
+        submitError.textContent = submissionError(response.status);
+        return;
+      }
       form.hidden = true;
       $('#request-success').hidden = false;
       dialog.scrollTop = 0;
       if (dialog.open) $('#request-success h3').focus();
-    } catch {
-      submitError.textContent = 'No pudimos enviar la solicitud. Tus datos siguen en el formulario. Vuelve a intentar.';
+    } catch (error) {
+      submitError.textContent = error.name === 'TimeoutError'
+        ? 'Se agotó el tiempo de espera. Tus datos siguen en el formulario. Vuelve a intentar.'
+        : 'El navegador no pudo conectar con el servidor. Tus datos siguen en el formulario. Vuelve a intentar.';
     } finally {
       submit.disabled = false;
       $('#request-back').disabled = false;
