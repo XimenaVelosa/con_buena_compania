@@ -9,6 +9,7 @@ const assets = {
   '/images/companionship-hero.jpg': 'image/jpeg', '/images/service-medical.jpg': 'image/jpeg', '/images/service-groceries.jpg': 'image/jpeg', '/images/service-errands.jpg': 'image/jpeg', '/images/service-shopping.jpg': 'image/jpeg', '/images/service-pharmacy.jpg': 'image/jpeg', '/images/service-institutions.jpg': 'image/jpeg', '/images/time-detail.jpg': 'image/jpeg',
   '/fonts/nunito-latin.woff2': 'font/woff2',
   '/images/companionship-hero-student.jpg': 'image/jpeg',
+  '/service-request.js': 'text/javascript',
 };
 const root = new URL('../', import.meta.url);
 const port = Number(process.env.PORT || 4173);

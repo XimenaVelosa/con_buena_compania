@@ -6,7 +6,11 @@ module.exports = async function handler(request, response) {
   const requestUrl = new URL(request.url, 'https://crm.local');
   const route = requestUrl.searchParams.get('route') || (typeof request.query?.route === 'string' ? request.query.route : '');
   const path = route ? `/${route}` : requestUrl.pathname.replace(/^\/api/, '');
-  if (!/^\/(?:auth\/(?:login|logout|session)|clients(?:\/(?:privacy-notice|activity-options|[a-f0-9-]{36}))?)$/.test(path) || !['GET', 'POST'].includes(request.method)) {
+  const serviceRequestRoute = (path === '/service-requests' && ['GET', 'POST'].includes(request.method))
+    || (path === '/service-requests/options' && request.method === 'GET');
+  const crmRoute = /^\/(?:auth\/(?:login|logout|session)|clients(?:\/(?:privacy-notice|activity-options|[a-f0-9-]{36}))?)$/.test(path)
+    && ['GET', 'POST'].includes(request.method);
+  if (!serviceRequestRoute && !crmRoute) {
     response.status(404).json({ message: 'Ruta no disponible.' }); return;
   }
   if (request.method === 'POST' && request.headers['x-crm-request'] !== '1') {
@@ -18,7 +22,12 @@ module.exports = async function handler(request, response) {
     const headers = { 'Content-Type': 'application/json', 'X-CRM-Request': '1' };
     if (request.headers.cookie) headers.Cookie = request.headers.cookie;
     if (request.headers.origin) headers.Origin = request.headers.origin;
-    const upstream = await fetch(new URL(path.slice(1), base), {
+    const upstreamUrl = new URL(path.slice(1), base);
+    const page = requestUrl.searchParams.get('page');
+    if (path === '/service-requests' && request.method === 'GET' && page !== null) {
+      upstreamUrl.searchParams.set('page', page);
+    }
+    const upstream = await fetch(upstreamUrl, {
       method: request.method, headers, redirect: 'error', signal: AbortSignal.timeout(20000),
       ...(request.method === 'POST' ? { body: typeof request.body === 'string' ? request.body : JSON.stringify(request.body || {}) } : {}),
     });

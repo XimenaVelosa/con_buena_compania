@@ -4,8 +4,10 @@
   let records = [];
   let revision = 0;
   let detailId = null;
+  let requestsRevision = 0;
+  let requestPage = 1;
   const dialog = $('#client-detail');
-  const knownRoutes = ['home', 'clients', 'visits', 'new-visit'];
+  const knownRoutes = ['home', 'clients', 'visits', 'requests', 'new-visit'];
   const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
   const plain = (value) => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
@@ -35,13 +37,16 @@
     user = null;
     records = [];
     revision++;
+    requestsRevision++;
+    requestPage = 1;
     dialog.close();
     $('#crm-app').hidden = true;
     $('#login-screen').hidden = false;
     $('#login-error').textContent = message;
     $('#client-search').value = '';
     $('#visit-search').value = '';
-    for (const selector of ['#recent-records', '#client-records', '#visit-records', '#detail-content']) $(selector).replaceChildren();
+    for (const selector of ['#recent-records', '#client-records', '#visit-records', '#detail-content', '#request-records']) $(selector).replaceChildren();
+    $('#requests-pages').hidden = true;
     document.dispatchEvent(new CustomEvent('cbc:logout', { detail: oldUser }));
   }
 
@@ -116,6 +121,46 @@
     }
   }
 
+  function requestCard(record) {
+    const fields = [
+      ['Correo electrónico', record.email],
+      ['Celular', record.phone],
+      ['Celular alternativo', record.alternatePhone || 'Sin registrar'],
+      ['Horas al día', record.hoursPerDay],
+      ['Días preferidos', record.days.join(', ')],
+    ];
+    return `<details class="request-record"><summary><strong>${escape(record.fullName)}</strong><span>${escape(record.municipality)}, ${escape(record.department)} · ${escape(date(record.createdAt))}</span></summary><div class="detail-section"><dl>${fields.map(([label, value]) => `<div><dt>${label}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl><h3>Actividades solicitadas</h3><ul>${record.activities.map((activity) => `<li>${escape(activity)}</li>`).join('')}</ul></div></details>`;
+  }
+
+  async function loadRequests(page = 1) {
+    const current = ++requestsRevision;
+    const status = $('#requests-status');
+    const pages = $('#requests-pages');
+    const refreshButton = $('#refresh-requests');
+    refreshButton.disabled = true;
+    pages.hidden = true;
+    status.hidden = false;
+    status.textContent = 'Cargando solicitudes…';
+    $('#request-records').replaceChildren();
+    try {
+      const result = await api(`/service-requests?page=${page}`);
+      if (!user || current !== requestsRevision) return;
+      if (!Array.isArray(result.items)) throw new Error('No pudimos cargar las solicitudes.');
+      requestPage = page;
+      $('#request-records').innerHTML = result.items.map(requestCard).join('');
+      status.textContent = result.items.length ? '' : 'Aún no hay solicitudes.';
+      status.hidden = Boolean(result.items.length);
+      $('#requests-page').textContent = `Página ${page}`;
+      $('#requests-previous').disabled = page === 1;
+      $('#requests-next').disabled = !result.hasNext;
+      pages.hidden = page === 1 && !result.hasNext;
+    } catch (error) {
+      if (user && current === requestsRevision) status.textContent = error.message;
+    } finally {
+      if (current === requestsRevision) refreshButton.disabled = false;
+    }
+  }
+
   function route() {
     if (!user) return;
     const requested = location.hash.slice(1) || 'home';
@@ -125,8 +170,9 @@
       if (link.dataset.route === (selected === 'new-visit' ? 'visits' : selected)) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     });
-    document.title = `${{ home: 'Inicio', clients: 'Clientes', visits: 'Visitas', 'new-visit': 'Nueva visita' }[selected]} · Con Buena Compañía`;
+    document.title = `${{ home: 'Inicio', clients: 'Clientes', visits: 'Visitas', requests: 'Solicitudes', 'new-visit': 'Nueva visita' }[selected]} · Con Buena Compañía`;
     if (selected === 'new-visit') document.dispatchEvent(new Event('cbc:open-visit'));
+    if (selected === 'requests') loadRequests();
   }
 
   const sections = [
@@ -234,6 +280,9 @@
   $('#client-search').addEventListener('input', render);
   $('#visit-search').addEventListener('input', render);
   document.querySelectorAll('[data-refresh]').forEach((button) => button.addEventListener('click', refresh));
+  $('#refresh-requests').addEventListener('click', () => loadRequests());
+  $('#requests-next').addEventListener('click', () => loadRequests(requestPage + 1));
+  $('#requests-previous').addEventListener('click', () => loadRequests(requestPage - 1));
   window.addEventListener('hashchange', route);
   document.addEventListener('cbc:visit-saved', refresh);
   window.CBC_CRM = { api, get user() { return user; } };

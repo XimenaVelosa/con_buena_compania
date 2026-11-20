@@ -20,8 +20,20 @@ const path = require('node:path');
       page.on('response', (response) => {
         if (response.status() >= 400 && /\/(?:images\/|fonts\/|landing[.-]|brand-logo\.png)/.test(new URL(response.url()).pathname)) failedAssets.push(`${response.status()} ${new URL(response.url()).pathname}`);
       });
-      page.on('request', (request) => { if (/\/api\/|:3001\//.test(request.url())) privateRequests.push(request.url()); });
+      page.on('request', (request) => {
+        if (new URL(request.url()).pathname.endsWith('/service-requests/options')) return;
+        if (/\/api\/|:3001\//.test(request.url())) privateRequests.push(request.url());
+      });
       await page.route('http://127.0.0.1:3001/**', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"Ingresa para continuar."}', headers: { 'Access-Control-Allow-Origin': new URL(base).origin, 'Access-Control-Allow-Credentials': 'true' } }));
+      await page.route('**/service-requests/options', (route) => route.fulfill({
+        json: {
+          groups: [{ title: 'Compras y diligencias', activities: [{ id: 'groceries', title: 'Compras de mercado', description: 'Acompañamiento al supermercado.', exclusions: ['Decidir las compras.'] }] }],
+          days: ['Lunes'],
+          departments: { 17: { name: 'Caldas', municipalities: { 17001: 'Manizales' } } },
+          notice: { version: 'QA', text: 'Autorizo el contacto para responder mi solicitud.' },
+        },
+        headers: { 'Access-Control-Allow-Origin': new URL(base).origin },
+      }));
       const response = await page.goto(base, { waitUntil: 'networkidle' });
       assert.equal(response.status(), 200);
       await page.evaluate(() => document.fonts.ready);
@@ -54,10 +66,19 @@ const path = require('node:path');
       if (await menu.isVisible()) await menu.click();
       await page.getByRole('link', { name: 'Solicitar compañía' }).click();
       await page.waitForURL((url) => url.hash === '#contacto');
-      const contactLink = new URL(await page.locator('#contacto').getByRole('link', { name: 'Hablemos' }).getAttribute('href'));
+      const contactLink = new URL(await page.locator('#contacto .contact-email').getAttribute('href'));
       assert.equal(contactLink.protocol, 'mailto:');
       assert.equal(contactLink.pathname, 'gerencia@conbuenacompania.com');
-      assert.equal(contactLink.searchParams.get('subject'), 'Solicitud de acompañamiento');
+      await page.getByRole('button', { name: 'Hablemos' }).click();
+      await page.locator('#request-next').click();
+      assert.ok(await page.locator('#request-activity-error').isVisible());
+      assert.equal(await page.locator('#request-details').isVisible(), false);
+      await page.locator('#request-groups input').check();
+      await page.locator('#request-next').click();
+      await page.locator('#request-details input[name=department]').fill('caldas');
+      assert.equal(await page.locator('#request-municipalities option').getAttribute('value'), 'Manizales');
+      await page.locator('#request-close').click();
+      assert.equal(await page.locator('#request-dialog').isVisible(), false);
       await page.locator('#public-activities').scrollIntoViewIfNeeded();
       await page.locator('#activities-next').click();
       await page.waitForFunction(() => document.querySelector('#public-activities').scrollLeft > 5);

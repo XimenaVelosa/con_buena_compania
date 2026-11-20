@@ -1,6 +1,6 @@
 # Frontend
 
-Landing editorial de Con Buena Compañía en la página principal y acceso al CRM en `/crm`. La landing presenta las ocho actividades, sus detalles y exclusiones, el proceso de acompañamiento y el contacto por correo para solicitar una cotización. El CRM conserva el inicio de sesión administrativo, el resumen, la consulta de clientes y el formulario de visitas de ocho etapas. Ambas páginas usan el PNG original de marca y diseño mobile-first.
+Landing editorial de Con Buena Compañía en la página principal y acceso al CRM en `/crm`. La landing presenta las ocho actividades, sus detalles y exclusiones, el proceso de acompañamiento y el formulario para solicitar una cotización. El CRM incluye el inicio de sesión administrativo, las solicitudes del sitio, la consulta de clientes y el formulario de visitas de ocho etapas. Ambas páginas usan el PNG original de marca y diseño mobile-first.
 
 ## Probar localmente
 
@@ -24,7 +24,7 @@ Cada detalle reserva un espacio de video 16:9, responsive, con controles nativos
 
 Los videos no se reproducen automáticamente ni se descargan al abrir la página. Al cerrar el detalle se detienen y se libera su fuente; cambiar de actividad carga únicamente el video correspondiente. Un fallo de carga muestra una opción para reintentar y conserva el acceso a la consulta por correo.
 
-La cotización se prepara según las actividades y las horas solicitadas. Los botones de consulta preparan un correo para `gerencia@conbuenacompania.com`. El envío se completa desde la aplicación de correo del visitante. La landing no crea visitas ni consulta datos de clientes.
+«Hablemos» carga las actividades y el catálogo de ubicación desde `GET /service-requests/options`. El visitante elige las actividades y luego completa sus datos de contacto y disponibilidad. `POST /service-requests` guarda el envío en «Solicitudes», donde el administrador lo consulta con su sesión del CRM. Para probar localmente, aplica la migración de solicitudes e inicia el backend en el puerto 3001. El correo sigue disponible para consultas directas desde los detalles de cada actividad.
 
 El logo original se reutiliza en cabecera y pie sin alterar el archivo. Las fotografías están en `images/`; la imagen principal se extrajo del HTML suministrado. La tipografía Nunito se sirve desde `fonts/` con su licencia OFL. El menú móvil, el carrusel y los diálogos admiten navegación por teclado y respetan la preferencia de movimiento reducido.
 

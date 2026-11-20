@@ -65,6 +65,21 @@ test('CRM proxy validates routes, requires explicit writes and forwards private 
     assert.equal(res.code, 200);
     assert.equal(res.headers['Cache-Control'], 'no-store');
     assert.equal(JSON.parse(res.body).version, 'QA-ACT');
+    global.fetch = async (url, options) => {
+      assert.equal(String(url), 'https://api.example.com/service-requests?page=2');
+      assert.equal(options.headers.Cookie, 'cbc_admin_session=opaque');
+      return { status: 200, headers: { getSetCookie: () => [] }, text: async () => '{"items":[],"hasNext":false}' };
+    };
+    res = response();
+    await handler({ method: 'GET', url: '/api/proxy?route=service-requests&page=2', headers: { cookie: 'cbc_admin_session=opaque' } }, res);
+    assert.equal(res.code, 200);
+    assert.deepEqual(JSON.parse(res.body).items, []);
+    res = response();
+    await handler({ method: 'POST', url: '/api/service-requests', headers: {} }, res);
+    assert.equal(res.code, 403);
+    res = response();
+    await handler({ method: 'POST', url: '/api/service-requests/options', headers: { 'x-crm-request': '1' } }, res);
+    assert.equal(res.code, 404);
     res = response();
     await handler({ method: 'GET', url: '/api/proxy?route=https://attacker.example', headers: {} }, res);
     assert.equal(res.code, 404);
