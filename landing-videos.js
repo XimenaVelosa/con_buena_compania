@@ -10,6 +10,7 @@ window.CBC_ACTIVITY_VIDEOS = {
   'institutional-procedures': null,
   'digital-support': null,
   'wellbeing-company': null,
+  'walking-exercise': null,
   'religious-companionship': null,
   'family-album': null,
   ...(window.CBC_ACTIVITY_VIDEOS || {}),
