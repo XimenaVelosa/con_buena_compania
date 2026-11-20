@@ -8,6 +8,7 @@ const assets = {
   '/app.js': 'text/javascript', '/crm.js': 'text/javascript', '/emergency-contacts.js': 'text/javascript', '/activities.js': 'text/javascript', '/privacy-consent.js': 'text/javascript', '/config.js': 'text/javascript', '/brand-logo.png': 'image/png',
   '/images/companionship-hero.jpg': 'image/jpeg', '/images/service-medical.jpg': 'image/jpeg', '/images/service-groceries.jpg': 'image/jpeg', '/images/service-errands.jpg': 'image/jpeg', '/images/service-shopping.jpg': 'image/jpeg', '/images/service-pharmacy.jpg': 'image/jpeg', '/images/service-institutions.jpg': 'image/jpeg', '/images/time-detail.jpg': 'image/jpeg',
   '/fonts/nunito-latin.woff2': 'font/woff2',
+  '/images/companionship-hero-student.jpg': 'image/jpeg',
 };
 const root = new URL('../', import.meta.url);
 const port = Number(process.env.PORT || 4173);
