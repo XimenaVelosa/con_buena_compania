@@ -67,6 +67,11 @@
   updateSlider();
 
   const commonExclusion = 'El acompañante no puede conducir vehículos ni realizar oficios domésticos, como lavar platos, cocinar, limpiar, lavar o planchar ropa. Estas tareas no se pueden acordar como adicionales.';
+  const transportExclusion = 'Prestar transporte o conducir vehículos para trasladar a la persona o sus artículos. Si se necesita transporte de un tercero, el cliente asume el costo del traslado.';
+  const activitiesWithOutings = new Set([
+    'medical-appointments', 'pharmacy-pickup', 'groceries', 'personal-shopping',
+    'personal-errands', 'institutional-procedures', 'wellbeing-company',
+  ]);
   const services = {
     'medical-appointments': {
       description: 'Acudimos al domicilio, coordinamos el traslado con un tercero y acompañamos a la persona durante el desplazamiento y su permanencia en la institución. Orientamos en trámites básicos y acompañamos su regreso a casa.',
@@ -160,7 +165,10 @@
     document.querySelector('#service-dialog-description').textContent = service.description;
     prepareVideo(link.dataset.service);
     const exclusions = document.querySelector('#service-dialog-exclusions');
-    exclusions.replaceChildren(...[...service.exclusions, commonExclusion].map((text) => { const item = document.createElement('li'); item.textContent = text; return item; }));
+    const items = [...service.exclusions];
+    if (activitiesWithOutings.has(link.dataset.service)) items.push(transportExclusion);
+    items.push(commonExclusion);
+    exclusions.replaceChildren(...items.map((text) => { const item = document.createElement('li'); item.textContent = text; return item; }));
     document.querySelector('#service-email').href = mailLink(`Consulta: ${title}`, `Hola, quisiera conocer la disponibilidad y las condiciones para la actividad: ${title}.`);
     document.body.classList.add('dialog-open');
     dialog.showModal();
