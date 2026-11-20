@@ -28,7 +28,10 @@ const path = require('node:path');
       await page.route('**/service-requests/options', (route) => route.fulfill({
         json: {
           groups: [
-            { title: 'Compras y diligencias', activities: [{ id: 'groceries', title: 'Compras de mercado', description: 'Acompañamiento al supermercado.', exclusions: ['Decidir las compras.'] }] },
+            { title: 'Compras y diligencias', activities: [
+              { id: 'personal-errands', title: 'Acompañamiento a diligencias bancarias, notariales o administrativas', description: 'Vamos con la persona a la entidad.', exclusions: ['Firmar por la persona.'] },
+              { id: 'delegated-errands', title: 'Diligencias por encargo', description: 'Radicar, recoger o entregar documentos con autorización.', exclusions: ['Hacer trámites que exijan presencia personal.'] },
+            ] },
             { title: 'Vida espiritual', activities: [{ id: 'religious-companionship', title: 'Acompañamiento religioso', description: 'Compañía para rezar el rosario o asistir a misa.', exclusions: ['Oficiar ceremonias.'] }] },
           ],
           days: ['Lunes'],
@@ -41,7 +44,7 @@ const path = require('node:path');
       assert.equal(response.status(), 200);
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.fonts.check('800 16px Nunito')), true, 'Self-hosted brand font is loaded');
-      assert.equal(await page.locator('.service-card').count(), 9);
+      assert.equal(await page.locator('.service-card').count(), 10);
       assert.equal(await page.locator('input[type=file], #client-form').count(), 0, 'Public landing has no authoring controls or CRM form');
       assert.equal(await page.locator('.brand img').getAttribute('src'), '/brand-logo.png');
       assert.equal(await page.locator('.footer-brand img').getAttribute('src'), '/brand-logo.png');
@@ -77,6 +80,9 @@ const path = require('node:path');
       assert.ok(await page.locator('#request-activity-error').isVisible());
       assert.equal(await page.locator('#request-details').isVisible(), false);
       await page.getByRole('checkbox', { name: 'Acompañamiento religioso' }).check();
+      await page.locator('#request-groups [value=personal-errands]').check();
+      await page.locator('#request-groups [value=delegated-errands]').check();
+      assert.equal(await page.locator('#request-groups input:checked').count(), 3);
       await page.locator('#request-next').click();
       await page.locator('#request-details input[name=department]').fill('caldas');
       assert.equal(await page.locator('#request-municipalities option').getAttribute('value'), 'Manizales');
@@ -90,7 +96,7 @@ const path = require('node:path');
       await page.waitForFunction(() => document.querySelector('#activities-next').disabled);
       await page.keyboard.press('Home');
       await page.waitForFunction(() => document.querySelector('#activities-previous').disabled);
-      for (const index of (width === 320 ? [0, 1, 2, 3, 4, 5, 6, 7, 8] : [0, 8])) {
+      for (const index of (width === 320 ? [...Array(10).keys()] : [0, 2, 3, 9])) {
         const link = page.locator('[data-service]').nth(index);
         const title = await link.locator('xpath=..').locator('h3').textContent();
         await link.click();

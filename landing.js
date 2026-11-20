@@ -70,7 +70,7 @@
   const transportExclusion = 'Prestar transporte o conducir vehículos para trasladar a la persona o sus artículos. Si se necesita transporte de un tercero, el cliente asume el costo del traslado.';
   const activitiesWithOutings = new Set([
     'medical-appointments', 'pharmacy-pickup', 'groceries', 'personal-shopping',
-    'personal-errands', 'institutional-procedures', 'wellbeing-company', 'religious-companionship',
+    'personal-errands', 'delegated-errands', 'institutional-procedures', 'wellbeing-company', 'religious-companionship',
   ]);
   const services = {
     'medical-appointments': {
@@ -82,8 +82,12 @@
       exclusions: ['Decidir las compras por la persona o utilizar tarjetas o claves sin su autorización.', 'Realizar tareas de cocina, aseo o limpieza después de las compras.', 'Cargar objetos que superen las condiciones seguras acordadas para el acompañamiento.'],
     },
     'personal-errands': {
-      description: 'Acompañamiento durante desplazamientos, gestión de turnos, orientación y organización de documentos, respetando la privacidad, autonomía y decisiones de la persona.',
+      description: 'Vamos contigo a la entidad, te ayudamos a ubicar la oficina, gestionar el turno y organizar tus documentos. Tú realizas las gestiones que requieren tu presencia o decisión.',
       exclusions: ['Solicitar o utilizar claves, tarjetas o contraseñas.', 'Firmar documentos, representar a la persona o realizar operaciones financieras en su nombre.', 'Retener documentos o dinero de la persona.'],
+    },
+    'delegated-errands': {
+      description: 'Cuando la entidad lo permite, podemos radicar, recoger o entregar documentos con tu autorización y llevarte a casa los documentos o comprobantes. Antes confirmamos qué autorización o documentos exige la entidad.',
+      exclusions: ['Hacer trámites que exijan tu presencia, firmar, suplantarte o ejercer representación legal.', 'Hacer transacciones bancarias, manejar dinero o acceder a cuentas, tarjetas o claves.'],
     },
     'personal-shopping': {
       description: 'Acompañamos a centros comerciales, farmacias y otros establecimientos para apoyar la búsqueda, selección y compra de artículos que la persona elige y autoriza. El traslado, cuando se necesita, se coordina con un tercero.',

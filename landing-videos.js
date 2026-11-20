@@ -4,6 +4,7 @@ window.CBC_ACTIVITY_VIDEOS = {
   'medical-appointments': null,
   groceries: null,
   'personal-errands': null,
+  'delegated-errands': null,
   'personal-shopping': null,
   'pharmacy-pickup': null,
   'institutional-procedures': null,
