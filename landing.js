@@ -106,8 +106,8 @@
       exclusions: ['Hacer transacciones bancarias, manejar contraseñas o claves, ni acceder a información financiera o sensible.', 'Realizar reparaciones electrónicas o instalaciones eléctricas.', 'Eliminar archivos o modificar información sin autorización de la persona.'],
     },
     'wellbeing-company': {
-      description: 'Compañía en el domicilio o fuera de él mediante juegos de mesa, lectura, conversación, actividades creativas, ejercicios recreativos de memoria, pasatiempos y actividades sociales.',
-      exclusions: ['Realizar terapias clínicas o cuidados de enfermería.', 'Hacer higiene personal, suministrar medicamentos o prestar vigilancia permanente.', 'Realizar tareas del hogar o asumir actividades de servicio doméstico.'],
+      description: 'Compañía en el domicilio o fuera de él mediante juegos de mesa, lectura, conversación, actividades creativas, ejercicios recreativos de memoria, pasatiempos y actividades sociales. También podemos acompañarte a caminar o hacer ejercicio dentro o fuera de casa, a tu ritmo y según la actividad que elijas.',
+      exclusions: ['Dar clases de ejercicio, diseñar rutinas o actuar como entrenador personal.', 'Realizar terapias clínicas o cuidados de enfermería.', 'Hacer higiene personal, suministrar medicamentos o prestar vigilancia permanente.', 'Realizar tareas del hogar o asumir actividades de servicio doméstico.'],
     },
     'religious-companionship': {
       description: 'Te acompañamos a rezar el rosario en casa o en grupo, asistir a misa o visitar la iglesia. Seguimos tus preferencias y tu ritmo durante la actividad.',
