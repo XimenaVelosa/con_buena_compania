@@ -46,8 +46,10 @@ const path = require('node:path');
       assert.equal(response.status(), 200);
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.fonts.check('800 16px Nunito')), true, 'Self-hosted brand font is loaded');
-      assert.equal(await page.locator('#public-activities .service-card').count(), 11);
-      assert.equal(await page.getByRole('region', { name: 'Otras actividades' }).locator('.service-card').count(), 1);
+      const cards = page.locator('#public-activities .service-card');
+      assert.equal(await cards.count(), 12);
+      assert.equal(await cards.nth(0).getAttribute('id'), 'public-family-album');
+      assert.equal(await cards.nth(1).getAttribute('id'), 'public-medical-appointments');
       assert.equal(await page.locator('input[type=file], #client-form').count(), 0, 'Public landing has no authoring controls or CRM form');
       assert.equal(await page.locator('.brand img').getAttribute('src'), '/brand-logo.png');
       assert.equal(await page.locator('.footer-brand img').getAttribute('src'), '/brand-logo.png');
@@ -101,7 +103,7 @@ const path = require('node:path');
       await page.waitForFunction(() => document.querySelector('#activities-next').disabled);
       await page.keyboard.press('Home');
       await page.waitForFunction(() => document.querySelector('#activities-previous').disabled);
-      for (const index of (width === 320 ? [...Array(12).keys()] : [0, 2, 3, 9, 10, 11])) {
+      for (const index of (width === 320 ? [...Array(12).keys()] : [0, 1, 3, 4, 10, 11])) {
         const link = page.locator('[data-service]').nth(index);
         const title = await link.locator('xpath=..').locator('h3').textContent();
         await link.click();

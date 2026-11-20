@@ -189,7 +189,7 @@
     document.body.classList.add('dialog-open');
     dialog.showModal();
   }
-  slider.closest('#actividades').addEventListener('click', (event) => { const link = event.target.closest('[data-service]'); if (link) { event.preventDefault(); openService(link); } });
+  slider.addEventListener('click', (event) => { const link = event.target.closest('[data-service]'); if (link) { event.preventDefault(); openService(link); } });
   document.querySelector('#service-dialog-close').addEventListener('click', () => dialog.close());
   document.querySelector('#service-dialog-back').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', (event) => {
