@@ -27,7 +27,10 @@ const path = require('node:path');
       await page.route('http://127.0.0.1:3001/**', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"Ingresa para continuar."}', headers: { 'Access-Control-Allow-Origin': new URL(base).origin, 'Access-Control-Allow-Credentials': 'true' } }));
       await page.route('**/service-requests/options', (route) => route.fulfill({
         json: {
-          groups: [{ title: 'Compras y diligencias', activities: [{ id: 'groceries', title: 'Compras de mercado', description: 'Acompañamiento al supermercado.', exclusions: ['Decidir las compras.'] }] }],
+          groups: [
+            { title: 'Compras y diligencias', activities: [{ id: 'groceries', title: 'Compras de mercado', description: 'Acompañamiento al supermercado.', exclusions: ['Decidir las compras.'] }] },
+            { title: 'Vida espiritual', activities: [{ id: 'religious-companionship', title: 'Acompañamiento religioso', description: 'Compañía para rezar el rosario o asistir a misa.', exclusions: ['Oficiar ceremonias.'] }] },
+          ],
           days: ['Lunes'],
           departments: { 17: { name: 'Caldas', municipalities: { 17001: 'Manizales' } } },
           notice: { version: 'QA', text: 'Autorizo el contacto para responder mi solicitud.' },
@@ -38,7 +41,7 @@ const path = require('node:path');
       assert.equal(response.status(), 200);
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.fonts.check('800 16px Nunito')), true, 'Self-hosted brand font is loaded');
-      assert.equal(await page.locator('.service-card').count(), 8);
+      assert.equal(await page.locator('.service-card').count(), 9);
       assert.equal(await page.locator('input[type=file], #client-form').count(), 0, 'Public landing has no authoring controls or CRM form');
       assert.equal(await page.locator('.brand img').getAttribute('src'), '/brand-logo.png');
       assert.equal(await page.locator('.footer-brand img').getAttribute('src'), '/brand-logo.png');
@@ -73,7 +76,7 @@ const path = require('node:path');
       await page.locator('#request-next').click();
       assert.ok(await page.locator('#request-activity-error').isVisible());
       assert.equal(await page.locator('#request-details').isVisible(), false);
-      await page.locator('#request-groups input').check();
+      await page.getByRole('checkbox', { name: 'Acompañamiento religioso' }).check();
       await page.locator('#request-next').click();
       await page.locator('#request-details input[name=department]').fill('caldas');
       assert.equal(await page.locator('#request-municipalities option').getAttribute('value'), 'Manizales');
@@ -87,7 +90,7 @@ const path = require('node:path');
       await page.waitForFunction(() => document.querySelector('#activities-next').disabled);
       await page.keyboard.press('Home');
       await page.waitForFunction(() => document.querySelector('#activities-previous').disabled);
-      for (const index of (width === 320 ? [0, 1, 2, 3, 4, 5, 6, 7] : [0, 7])) {
+      for (const index of (width === 320 ? [0, 1, 2, 3, 4, 5, 6, 7, 8] : [0, 8])) {
         const link = page.locator('[data-service]').nth(index);
         const title = await link.locator('xpath=..').locator('h3').textContent();
         await link.click();
@@ -140,7 +143,7 @@ const path = require('node:path');
       await page.waitForURL((url) => url.pathname === '/crm' && url.hash === '#clients');
       await page.locator('#login-screen').waitFor({ state: 'visible' });
       assert.deepEqual(errors, [], 'No JavaScript errors in landing or CRM entry');
-      console.log(`OK ${width}px: original logo, mobile menu, eight service details, companionship requests, email links, carousel, CRM access and legacy links; no overflow.`);
+      console.log(`OK ${width}px: original logo, mobile menu, activity details, companionship requests, email links, carousel, CRM access and legacy links; no overflow.`);
       await context.close();
     }
 

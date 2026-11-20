@@ -10,8 +10,8 @@ const path = require('node:path');
   const artifacts = path.resolve(__dirname, '../.local/qa-artifacts');
   await mkdir(artifacts, { recursive: true });
   const activityFixture = process.env.CRM_ACTIVITY_FIXTURE ? JSON.parse(await readFile(process.env.CRM_ACTIVITY_FIXTURE, 'utf8')) : {
-    version: 'QA-ACT-v1', hash: 'd'.repeat(64), introduction: 'Ocho actividades de interés. Con Buena Compañía no presta transporte; los acompañantes no conducen. Si necesita taxi, registre un contacto o autorice su coordinación.', scopeNotice: 'En ninguna actividad se permite conducir vehículos ni realizar oficios domésticos, como lavar platos, cocinar o limpiar.', commonExclusion: 'No se permite conducir ni realizar oficios domésticos.', taxiAuthorizationText: 'Autorizo a coordinar un taxi de confianza prestado por un tercero.',
-    activities: ['Citas médicas, terapias o exámenes', 'Mercado y compras del hogar', 'Diligencias bancarias, notariales o administrativas', 'Compras personales', 'Recogida en farmacia', 'Trámites institucionales', 'Equipos y herramientas digitales', 'Compañía, bienestar y juegos'].map((title, index) => ({ id: `qa-activity-${index + 1}`, title, description: 'Acompañamiento respetuoso según el alcance de esta actividad.', exclusions: ['No representar a la persona ni tomar decisiones por ella.', 'No realizar tareas ajenas al acompañamiento.'] })),
+    version: 'QA-ACT-v1', hash: 'd'.repeat(64), introduction: 'Actividades de interés. Con Buena Compañía no presta transporte; los acompañantes no conducen. Si necesita taxi, registre un contacto o autorice su coordinación.', scopeNotice: 'En ninguna actividad se permite conducir vehículos ni realizar oficios domésticos, como lavar platos, cocinar o limpiar.', commonExclusion: 'No se permite conducir ni realizar oficios domésticos.', taxiAuthorizationText: 'Autorizo a coordinar un taxi de confianza prestado por un tercero.',
+    activities: ['Citas médicas, terapias o exámenes', 'Mercado y compras del hogar', 'Diligencias bancarias, notariales o administrativas', 'Compras personales', 'Recogida en farmacia', 'Trámites institucionales', 'Equipos y herramientas digitales', 'Compañía, bienestar y juegos', 'Acompañamiento religioso'].map((title, index) => ({ id: `qa-activity-${index + 1}`, title, description: 'Acompañamiento respetuoso según el alcance de esta actividad.', exclusions: ['No representar a la persona ni tomar decisiones por ella.', 'No realizar tareas ajenas al acompañamiento.'] })),
   };
   try {
     for (const width of (process.env.CRM_QA_WIDTHS ? process.env.CRM_QA_WIDTHS.split(',').map(Number) : [320, 375, 390, 768, 1440])) {
@@ -188,9 +188,9 @@ const path = require('node:path');
           assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('cbc-client-draft:qa-user')).mobilityNotes), undefined);
         }
         if (stage === 5) {
-          await page.waitForFunction(() => document.querySelectorAll('#activities-options .activity-card').length === 8);
-          assert.equal(await page.locator('.activity-description').count(), 8);
-          assert.equal(await page.locator('.activity-exclusions').count(), 8);
+          await page.waitForFunction((count) => document.querySelectorAll('#activities-options .activity-card').length === count, activityCatalog.activities.length);
+          assert.equal(await page.locator('.activity-description').count(), activityCatalog.activities.length);
+          assert.equal(await page.locator('.activity-exclusions').count(), activityCatalog.activities.length);
           await page.locator('#activities-options input').nth(0).check();
           await page.locator('#activities-options input').nth(7).check();
           await page.locator('#next-button').click();

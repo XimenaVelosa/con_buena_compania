@@ -10,6 +10,7 @@ const assets = {
   '/fonts/nunito-latin.woff2': 'font/woff2',
   '/images/companionship-hero-student.jpg': 'image/jpeg',
   '/service-request.js': 'text/javascript',
+  '/images/service-religious-companionship.jpg': 'image/jpeg',
 };
 const root = new URL('../', import.meta.url);
 const port = Number(process.env.PORT || 4173);

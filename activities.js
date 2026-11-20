@@ -154,12 +154,12 @@
 
   async function load() {
     const id = ++requestId;
-    status.textContent = 'Cargando las ocho actividades…';
+    status.textContent = 'Cargando las actividades…';
     document.querySelector('#activities-reload').disabled = true;
     try {
       const result = await window.CBC_CRM.api('/clients/activity-options');
       if (id !== requestId || !window.CBC_CRM.user) return;
-      if (!result.version || !/^[a-f0-9]{64}$/.test(result.hash || '') || !Array.isArray(result.activities) || result.activities.length !== 8 || new Set(result.activities.map((item) => item.id)).size !== 8 || !result.activities.every((item) => typeof item.id === 'string' && typeof item.title === 'string' && typeof item.description === 'string' && Array.isArray(item.exclusions))) throw new Error('No se pudieron cargar las ocho actividades. Pulsa Actualizar actividades para volver a intentar.');
+      if (!result.version || !/^[a-f0-9]{64}$/.test(result.hash || '') || !Array.isArray(result.activities) || !result.activities.length || !result.activities.every((item) => typeof item.id === 'string' && typeof item.title === 'string' && typeof item.description === 'string' && Array.isArray(item.exclusions)) || new Set(result.activities.map((item) => item.id)).size !== result.activities.length) throw new Error('No se pudieron cargar las actividades. Pulsa Actualizar actividades para volver a intentar.');
       const previous = pending || { selection: catalog ? serialize() : undefined, savedDraft: draft() };
       catalog = result;
       render();

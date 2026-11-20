@@ -70,7 +70,7 @@
   const transportExclusion = 'Prestar transporte o conducir vehículos para trasladar a la persona o sus artículos. Si se necesita transporte de un tercero, el cliente asume el costo del traslado.';
   const activitiesWithOutings = new Set([
     'medical-appointments', 'pharmacy-pickup', 'groceries', 'personal-shopping',
-    'personal-errands', 'institutional-procedures', 'wellbeing-company',
+    'personal-errands', 'institutional-procedures', 'wellbeing-company', 'religious-companionship',
   ]);
   const services = {
     'medical-appointments': {
@@ -104,6 +104,10 @@
     'wellbeing-company': {
       description: 'Compañía en el domicilio o fuera de él mediante juegos de mesa, lectura, conversación, actividades creativas, ejercicios recreativos de memoria, pasatiempos y actividades sociales.',
       exclusions: ['Realizar terapias clínicas o cuidados de enfermería.', 'Hacer higiene personal, suministrar medicamentos o prestar vigilancia permanente.', 'Realizar tareas del hogar o asumir actividades de servicio doméstico.'],
+    },
+    'religious-companionship': {
+      description: 'Te acompañamos a rezar el rosario en casa o en grupo, asistir a misa o visitar la iglesia. Seguimos tus preferencias y tu ritmo durante la actividad.',
+      exclusions: ['Oficiar ceremonias o asumir funciones de un ministro religioso.'],
     },
   };
 

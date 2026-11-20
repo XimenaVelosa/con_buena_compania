@@ -1,6 +1,6 @@
 # Frontend
 
-Landing editorial de Con Buena Compañía en la página principal y acceso al CRM en `/crm`. La landing presenta las ocho actividades, sus detalles y exclusiones, el proceso de acompañamiento y el formulario para solicitar una cotización. El CRM incluye el inicio de sesión administrativo, las solicitudes del sitio, la consulta de clientes y el formulario de visitas de ocho etapas. Ambas páginas usan el PNG original de marca y diseño mobile-first.
+Landing editorial de Con Buena Compañía en la página principal y acceso al CRM en `/crm`. La landing presenta las actividades, sus detalles y exclusiones, el proceso de acompañamiento y el formulario para solicitar una cotización. El CRM incluye el inicio de sesión administrativo, las solicitudes del sitio, la consulta de clientes y el formulario de visitas de ocho etapas. Ambas páginas usan el PNG original de marca y diseño mobile-first.
 
 ## Probar localmente
 
@@ -18,7 +18,7 @@ La aplicación no contiene credenciales de demostración ni listas de clientes f
 
 ## Landing editorial
 
-Los textos, fotografías, contacto y tarifa base provienen del HTML editorial proporcionado. Se conservaron las ocho actividades actuales y sus límites: acompañamiento no médico, transporte de terceros, acompañantes que no conducen y exclusión de oficios domésticos. Cada actividad tiene detalles accesibles en un diálogo con su descripción, video y lista «No incluye ni se permite».
+Los textos, fotografías, contacto y tarifa base provienen del HTML editorial proporcionado. Se conservaron las actividades actuales y sus límites: acompañamiento no médico, transporte de terceros, acompañantes que no conducen y exclusión de oficios domésticos. Cada actividad tiene detalles accesibles en un diálogo con su descripción, video y lista «No incluye ni se permite».
 
 Cada detalle reserva un espacio de video 16:9, responsive, con controles nativos y reproducción dentro de la página en móviles. Debajo se muestra únicamente la lista «No incluye ni se permite», sin los párrafos adicionales de condiciones y consideraciones. Los videos aún no se han proporcionado: se muestra «Disponible próximamente» hasta configurar una fuente real en `landing-videos.js`. Cada clave corresponde al `data-service` de su tarjeta y acepta un enlace directo HTTPS a MP4/WebM o un objeto como `{ src: '/videos/citas-medicas.mp4', poster: '/images/service-medical.jpg' }`. Para archivos locales, crea `videos/` y utiliza nombres sin espacios. Los enlaces a páginas de YouTube u otras plataformas requieren su integración específica y no son enlaces directos de video.
 
@@ -46,7 +46,7 @@ El aviso está publicado a nombre de Con Buena Compañía y se puede aceptar sin
 
 ## Actividades de interés y taxis
 
-El paso 06 se llama «Actividades que le interesaría contratar». Carga las ocho opciones desde `GET /clients/activity-options`, con una descripción, exclusiones específicas y la prohibición común de conducir vehículos y realizar oficios domésticos. Las exclusiones permanecen visibles en cada tarjeta. La aplicación registra interés; la operación del servicio y la coordinación con el transportador se realizan por el equipo.
+El paso 06 se llama «Actividades que le interesaría contratar». Carga las opciones desde `GET /clients/activity-options`, con una descripción, exclusiones específicas y la prohibición común de conducir vehículos y realizar oficios domésticos. Las exclusiones permanecen visibles en cada tarjeta. La aplicación registra interés; la operación del servicio y la coordinación con el transportador se realizan por el equipo.
 
 Cuando se selecciona alguna actividad, se indica cómo se resolverán los traslados: uno o varios taxis de confianza de la persona, autorización para buscar y coordinar un taxi prestado por un tercero, o actividad en casa / traslado ya resuelto por la persona. Se admiten hasta cinco contactos con nombre y teléfono, más empresa y placa opcionales. La segunda opción exige el nombre de quien autoriza y una casilla desmarcada inicialmente al final de la sección. El nombre se sugiere a partir de quien autorizó los datos personales y se puede editar.
 

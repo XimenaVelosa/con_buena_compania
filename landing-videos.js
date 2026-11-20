@@ -9,5 +9,6 @@ window.CBC_ACTIVITY_VIDEOS = {
   'institutional-procedures': null,
   'digital-support': null,
   'wellbeing-company': null,
+  'religious-companionship': null,
   ...(window.CBC_ACTIVITY_VIDEOS || {}),
 };
