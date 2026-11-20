@@ -8,8 +8,6 @@
   if (redirectLegacyView()) return;
   window.addEventListener('hashchange', redirectLegacyView);
 
-  const email = 'gerencia@conbuenacompania.com';
-  const mailLink = (subject, body) => `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const menuButton = document.querySelector('#menu-toggle');
   const navigation = document.querySelector('#public-navigation');
@@ -185,13 +183,19 @@
     if (activitiesWithOutings.has(link.dataset.service)) items.push(transportExclusion);
     items.push(commonExclusion);
     exclusions.replaceChildren(...items.map((text) => { const item = document.createElement('li'); item.textContent = text; return item; }));
-    document.querySelector('#service-email').href = mailLink(`Consulta: ${title}`, `Hola, quisiera conocer la disponibilidad y las condiciones para la actividad: ${title}.`);
     document.body.classList.add('dialog-open');
     dialog.showModal();
   }
   slider.addEventListener('click', (event) => { const link = event.target.closest('[data-service]'); if (link) { event.preventDefault(); openService(link); } });
   document.querySelector('#service-dialog-close').addEventListener('click', () => dialog.close());
   document.querySelector('#service-dialog-back').addEventListener('click', () => dialog.close());
+  document.querySelector('#service-consult').addEventListener('click', () => {
+    const activityLink = opener;
+    dialog.addEventListener('close', () => {
+      document.dispatchEvent(new CustomEvent('cbc:request-activity', { detail: activityLink }));
+    }, { once: true });
+    dialog.close();
+  });
   dialog.addEventListener('click', (event) => {
     if (event.target !== dialog) return;
     const bounds = dialog.getBoundingClientRect();

@@ -6,7 +6,9 @@
   const submit = $('#request-send');
   const activityStep = $('#request-activities');
   const detailsStep = $('#request-details');
+  const activityIntro = $('#request-activity-intro');
   const activityError = $('#request-activity-error');
+  const continueSelected = $('#request-continue-selected');
   const submitError = $('#request-submit-error');
   const department = form.elements.namedItem('department');
   const municipality = form.elements.namedItem('municipality');
@@ -27,6 +29,8 @@
   let departmentCode;
   let loading = false;
   let lastSubmission;
+  let pendingActivity;
+  let returnFocus = opener;
 
   function element(tag, text) {
     const node = document.createElement(tag);
@@ -91,6 +95,7 @@
       fillList($('#request-departments'), Object.values(result.departments).map((entry) => entry.name));
       options = result;
       syncLocations();
+      applyPendingActivity();
       $('#request-loading').hidden = true;
       form.hidden = false;
     } catch {
@@ -128,35 +133,81 @@
     return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((input) => input.value);
   }
 
-  opener.addEventListener('click', () => {
+  function updateActivitySelection() {
+    const selected = activityStep.querySelectorAll('input[name="activities"]:checked');
+    continueSelected.hidden = selected.length === 0;
+    if (selected.length === 0) {
+      activityIntro.textContent = 'Selecciona todas las actividades de acompañamiento que te interesan.';
+      return;
+    }
+    activityError.textContent = '';
+    const description = selected.length === 1
+      ? `«${selected[0].labels[0].textContent}» está seleccionada.`
+      : `Tienes ${selected.length} actividades seleccionadas.`;
+    activityIntro.textContent = `${description} Puedes agregar otras antes de continuar.`;
+  }
+
+  function applyPendingActivity() {
+    if (!pendingActivity) return;
+    const activity = [...activityStep.querySelectorAll('input[name="activities"]')]
+      .find((input) => input.value === pendingActivity);
+    pendingActivity = undefined;
+    if (activity) {
+      activity.checked = true;
+      updateActivitySelection();
+    } else {
+      activityIntro.textContent = 'Esa actividad no aparece en el formulario. Puedes elegir otra actividad de la lista.';
+    }
+  }
+
+  function resetRequest() {
+    $('#request-success').hidden = true;
+    form.reset();
+    syncLocations();
+    updateActivitySelection();
+    showStep(false);
+    form.hidden = false;
+    lastSubmission = undefined;
+  }
+
+  function openRequest(trigger, activityId) {
+    if (dialog.open) return;
+    returnFocus = trigger;
+    if (activityId && !$('#request-success').hidden) resetRequest();
     dialog.showModal();
     document.body.classList.add('dialog-open');
     $('#request-title').focus();
+    if (activityId) {
+      pendingActivity = activityId;
+      showStep(false);
+      if (options) applyPendingActivity();
+    }
     loadOptions();
+  }
+
+  opener.addEventListener('click', () => openRequest(opener));
+  document.addEventListener('cbc:request-activity', ({ detail: link }) => {
+    if (link?.dataset.service) openRequest(link, link.dataset.service);
   });
   $('#request-close').addEventListener('click', () => dialog.close());
   $('#request-done').addEventListener('click', () => dialog.close());
   $('#request-retry').addEventListener('click', loadOptions);
   dialog.addEventListener('close', () => {
     document.body.classList.remove('dialog-open');
-    if (!$('#request-success').hidden) {
-      $('#request-success').hidden = true;
-      form.reset();
-      syncLocations();
-      showStep(false);
-      form.hidden = false;
-      lastSubmission = undefined;
-    }
-    opener.focus();
+    if (!$('#request-success').hidden) resetRequest();
+    (returnFocus.isConnected ? returnFocus : opener).focus();
   });
-  $('#request-next').addEventListener('click', () => {
+  function continueRequest() {
     if (!checked('activities').length) {
       activityError.textContent = 'Selecciona al menos una actividad para continuar.';
       return;
     }
     activityError.textContent = '';
     showStep(true);
-  });
+  }
+  $('#request-groups').addEventListener('change', updateActivitySelection);
+  $('#request-next').addEventListener('click', continueRequest);
+  continueSelected.addEventListener('click', continueRequest);
   $('#request-back').addEventListener('click', () => showStep(false));
   for (const field of [department, municipality]) {
     field.addEventListener('input', syncLocations);

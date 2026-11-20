@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="/landing.css" />
     <script src="/config.js" defer></script>
     <script src="/landing-videos.js" defer></script>
-    <script src="/landing.js" defer></script>
-    <script src="/service-request.js?v=20261120-3" defer></script>
+    <script src="/landing.js?v=20261120" defer></script>
+    <script src="/service-request.js?v=20261120-4" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#contenido">Ir al contenido</a>
@@ -96,7 +96,8 @@
         <form id="request-form" novalidate hidden>
           <fieldset id="request-activities" class="request-step">
             <legend tabindex="-1">1 de 2 · Elige las actividades</legend>
-            <p>Selecciona todas las actividades de acompañamiento que te interesan.</p>
+            <p id="request-activity-intro" aria-live="polite">Selecciona todas las actividades de acompañamiento que te interesan.</p>
+            <button id="request-continue-selected" class="button request-continue-selected" type="button" hidden>Continuar con la selección</button>
             <div id="request-groups"></div>
             <p id="request-scope" class="request-note"></p>
             <p id="request-activity-error" class="request-error" role="alert"></p>
@@ -148,10 +149,10 @@
               <strong>Video de esta actividad</strong><span>Disponible próximamente</span>
             </div>
           </div>
-          <div id="service-video-error" class="service-video-error" role="alert" hidden><p>No fue posible cargar el video. Puedes volver a intentarlo o consultar esta actividad por correo.</p><button id="service-video-retry" class="text-link" type="button">Volver a intentar</button></div>
+          <div id="service-video-error" class="service-video-error" role="alert" hidden><p>No fue posible cargar el video. Puedes volver a intentarlo o consultar esta actividad desde el formulario.</p><button id="service-video-retry" class="text-link" type="button">Volver a intentar</button></div>
         </section>
         <div class="dialog-exclusions"><h3>No incluye ni se permite</h3><ul id="service-dialog-exclusions"></ul></div>
-        <div class="dialog-actions"><a id="service-email" class="button" href="mailto:gerencia@conbuenacompania.com">Consultar esta actividad <span aria-hidden="true">↗</span></a><button id="service-dialog-back" class="text-link" type="button">Seguir explorando</button></div>
+        <div class="dialog-actions"><button id="service-consult" class="button" type="button" aria-haspopup="dialog" aria-controls="request-dialog">Consultar esta actividad <span aria-hidden="true">↗</span></button><button id="service-dialog-back" class="text-link" type="button">Seguir explorando</button></div>
       </div>
     </dialog>
   </body>

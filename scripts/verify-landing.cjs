@@ -95,6 +95,9 @@ const path = require('node:path');
       assert.equal(await page.locator('#request-submit-error').textContent(), 'Escribe tu nombre completo.');
       await page.locator('#request-details input[name=department]').fill('caldas');
       assert.equal(await page.locator('#request-municipalities option').getAttribute('value'), 'Manizales');
+      await page.locator('#request-back').click();
+      const checkedActivities = page.locator('#request-groups input:checked');
+      while (await checkedActivities.count()) await checkedActivities.first().uncheck();
       await page.locator('#request-close').click();
       assert.equal(await page.locator('#request-dialog').isVisible(), false);
       await page.locator('#public-activities').scrollIntoViewIfNeeded();
@@ -113,8 +116,7 @@ const path = require('node:path');
         assert.equal(await page.locator('#service-dialog-title').textContent(), title);
         assert.ok((await page.locator('#service-dialog-description').textContent()).length > 60);
         assert.ok((await page.locator('#service-dialog-exclusions').textContent()).includes('oficios domésticos'));
-        const contact = new URL(await page.locator('#service-email').getAttribute('href'));
-        assert.ok(contact.searchParams.get('subject').includes(title));
+        assert.equal(await page.locator('#service-consult').getAttribute('aria-controls'), 'request-dialog');
         assert.equal(await page.locator('#service-video-placeholder').isVisible(), true, 'Missing video shows an honest placeholder');
         assert.equal(await page.locator('#service-video').isVisible(), false);
         assert.equal(await page.locator('#service-video').getAttribute('src'), null);
@@ -131,7 +133,30 @@ const path = require('node:path');
         assert.ok(close.y >= 0 && close.y + close.height <= 901, 'Dialog close control remains available while scrolling');
         assert.equal(await page.locator('#service-dialog').evaluate((element) => element.scrollWidth <= element.clientWidth + 1), true, 'Dialog has no horizontal overflow');
         if (index === 0 && [390, 1440].includes(width)) await page.locator('#service-dialog').screenshot({ path: path.join(artifacts, `landing-detail-${width}.png`) });
-        await page.keyboard.press('Escape');
+        if (index === 0) {
+          await page.getByRole('button', { name: 'Consultar esta actividad' }).click();
+          await page.locator('#request-dialog').waitFor({ state: 'visible' });
+          assert.equal(await page.locator('#request-groups [value=family-album]').isChecked(), true);
+          assert.ok((await page.locator('#request-activity-intro').textContent()).includes('Álbum familiar'));
+          await page.locator('#request-groups [value=walking-exercise]').check();
+          assert.equal(await page.locator('#request-groups input:checked').count(), 2);
+          await page.locator('#request-continue-selected').click();
+          for (const [name, value] of Object.entries({ fullName: 'Persona de prueba', email: 'qa@example.invalid', phone: '3000000000', municipality: 'Manizales' })) {
+            await page.locator(`#request-details input[name=${name}]`).fill(value);
+          }
+          await page.locator('#request-details input[name=authorized]').check();
+          await page.locator('#request-days input').first().check();
+          await page.locator('#request-send').click();
+          assert.match(await page.locator('#request-submit-error').textContent(), /24 horas/);
+          await page.locator('#request-details input[name=hoursPerDay]').fill('4');
+          await page.locator('#request-days input').first().uncheck();
+          await page.locator('#request-send').click();
+          assert.equal(await page.locator('#request-submit-error').textContent(), 'Selecciona al menos un día.');
+          await page.locator('#request-close').click();
+          await page.locator('#request-dialog').waitFor({ state: 'hidden' });
+        } else {
+          await page.keyboard.press('Escape');
+        }
         await page.locator('#service-dialog').waitFor({ state: 'hidden' });
         assert.equal(await link.evaluate((element) => document.activeElement === element), true, 'Focus returns to activity link');
       }
